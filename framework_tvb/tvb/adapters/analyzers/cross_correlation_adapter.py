@@ -381,6 +381,7 @@ class PearsonCorrelationCoefficientAdapter(ABCAsynchronous):
         """
         with h5.h5_file_for_index(self.input_time_series_index) as ts_h5:
             ts_labels_ordering = ts_h5.labels_ordering.load()
+            labels_dimensions = ts_h5.labels_dimensions.load()
             result = self._compute_correlation_coefficients(ts_h5, view_model.t_start, view_model.t_end)
 
         if isinstance(self.input_time_series_index, TimeSeriesEEGIndex) \
@@ -396,6 +397,7 @@ class PearsonCorrelationCoefficientAdapter(ABCAsynchronous):
         corr_coef.array_data = result
         corr_coef.source = TimeSeries(gid=view_model.time_series)
         corr_coef.labels_ordering = labels_ordering
+        corr_coef.labels_dimensions = labels_dimensions
 
         return h5.store_complete(corr_coef, self.storage_path)
 

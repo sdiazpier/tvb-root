@@ -54,6 +54,7 @@ class CorrelationCoefficientsH5(DataTypeMatrixH5):
         self.array_data = DataSet(CorrelationCoefficients.array_data, self)
         self.source = Reference(CorrelationCoefficients.source, self)
         self.labels_ordering = Json(CorrelationCoefficients.labels_ordering, self)
+        self.labels_dimensions = Json(CorrelationCoefficients.labels_dimensions, self)
 
     def get_correlation_data(self, selected_state, selected_mode):
         matrix_to_display = self.array_data[:, :, int(selected_state) - 1, int(selected_mode)]

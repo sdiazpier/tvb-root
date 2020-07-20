@@ -252,7 +252,6 @@ class FunctionalConnectivityDynamicsAdapter(ABCAsynchronous):
             fcd_array_metadata = self._populate_fcd_h5(fcd_h5, fcd, fcd_index, self.input_time_series_index.gid,
                                                        view_model.sw, view_model.sp)
         self._populate_fcd_index(fcd_index, self.input_time_series_index, fcd, fcd_array_metadata)
-        fcd_index.labels_dimensions = self.input_time_series_index.labels_dimensions
         result.append(fcd_index)
 
         if np.amax(fcd_segmented) == 1.1:
