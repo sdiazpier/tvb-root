@@ -43,9 +43,13 @@ class CrossCorrelationIndex(DataTypeMatrix):
     source = relationship(TimeSeriesIndex, foreign_keys=fk_source_gid, primaryjoin=TimeSeriesIndex.gid == fk_source_gid)
 
     labels_ordering = Column(String, nullable=False)
+    labels_dimensions = Column(String, nullable=False)
+    subtype = Column(String)
 
     def fill_from_has_traits(self, datatype):
         # type: (CrossCorrelation)  -> None
         super(CrossCorrelationIndex, self).fill_from_has_traits(datatype)
         self.labels_ordering = json.dumps(datatype.labels_ordering)
+        self.labels_dimensions = json.dumps(datatype.labels_dimensions)
+        self.subtype = datatype.__class__.__name__
         self.fk_source_gid = datatype.source.gid.hex
