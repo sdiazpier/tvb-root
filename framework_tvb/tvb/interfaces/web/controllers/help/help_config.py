@@ -75,6 +75,7 @@ class HelpConfig:
         self._add_mapping(WebStructure.SECTION_ANALYZE, None, self.ANALYZE_HELP_PAGE, None)
         self._add_mapping(WebStructure.SECTION_STIMULUS, None, self.STIMULUS_HELP_PAGE, None)
         self._add_mapping(WebStructure.SECTION_CONNECTIVITY, None, self.CONNECTIVITY_HELP_PAGE, None)
+        #self._add_mapping(WebStructure.SECTION_TOOLS, None, self.TOOLS_HELP_PAGE, None)
 
         # Add mappings for USER subsections
         self._add_mapping(WebStructure.SECTION_USER, WebStructure.SUB_SECTION_LOGIN, self.USER_HELP_PAGE, None)

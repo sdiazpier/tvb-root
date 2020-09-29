@@ -510,6 +510,10 @@ header nav li#nav-stimulus-surfacemodel {
 background-image: url("./img/nav/img_ss_generic5.png");
 }
 
+header nav li#nav-tools-dsl {
+background-image: url("./img/nav/img_ss_generic6.png");
+}
+
 /* TODO: Real nav images for section ANALYZE */
 header nav li#nav-analyze-crosscorr {
 background-image: url("./img/nav/img_ss_generic1.png");
@@ -575,6 +579,9 @@ header nav li#nav-connectivity-allen {
 background-image: url("./img/nav/img_ss_generic3.png");
 }
 
+header nav li#nav-tools-dsl {
+background-image: url("./img/nav/img_ss_generic4.png");
+}
 /* !-------------------------------------------- */
 /* !COMPONENT: Header Back button */
 /* !-------------------------------------------- */
@@ -2129,22 +2136,25 @@ padding-top: 11px;
 }
 
 footer nav li#nav-user {
-width: 11%;
+width: 10%;
 }
 footer nav li#nav-project {
-width: 16%;
+width: 15%;
 }
 footer nav li#nav-burst {
-width: 21%;
+width: 15%;
 }
 footer nav li#nav-analyze {
-width: 17%;
+width: 15%;
 }
 footer nav li#nav-stimulus {
-width: 17%;
+width: 15%;
 }
 footer nav li#nav-connectivity {
-width: 18%;
+width: 15%;
+}
+footer nav li#nav-tools {
+width: 13%;
 }
 
 footer nav li.active {
@@ -2320,6 +2330,31 @@ background-position: -90px -300px;
 width: 4px;
 }
 
+/* --- Tools tab */
+footer nav li.idle#nav-tools span.left,
+footer nav li.enabled#nav-tools span.left {
+background-position: 0 -360px;
+left: -16px;
+width: 17px;
+}
+
+footer nav li.active#nav-tools span.left {
+background-position: -60px -360px;
+left: -26px;
+width: 27px;
+}
+
+footer nav li.idle#nav-tools span.right,
+footer nav li.enabled#nav-tools span.right {
+background-position: -30px -360px;
+width: 4px;
+}
+
+footer nav li.active#nav-tools span.right {
+background-position: -90px -360px;
+width: 4px;
+}
+
 /* --- Link size, Text coloring */
 footer nav li a {
 color: #646a6f;
@@ -2376,6 +2411,11 @@ footer nav li#nav-connectivity.enabled:hover a:before {
 background-position: 0 -88px;
 }
 
+footer nav li#nav-tools.active a:before,
+footer nav li#nav-tools.enabled:hover a:before {
+background-position: 0 -88px;
+}
+
 footer nav li#nav-user a:before {
 background-image: url("./img/nav/icon_nav_user.png");
 }
@@ -2393,6 +2433,9 @@ background-image: url("./img/nav/icon_nav_needle.png");
 }
 footer nav li#nav-connectivity a:before {
 background-image: url("./img/nav/icon_nav_connectivity.png");
+}
+footer nav li#nav-tools a:before {
+background-image: url("./img/nav/icon_nav_gear.png");
 }
 
 /* !============================================================================ */

@@ -1,0 +1,28 @@
+<link rel="stylesheet" type="text/css" href="/static/style/tools.css?{{ currentVersionJS }}"/>
+
+<form id="main" class="model-list view-column col-1" method="post">
+    <h3>View under construction</h3>
+    <p>Please, select an action in the right panel</p>
+
+    <aside class="header-component toolbar can-extend auto-extends">
+        <div class="extension">
+            <div class="dropdown-pane">
+                <ul>
+                    <li>
+                        <button tabindex='50' type="submit" class="action action-new"
+                                value="Create" name="create">
+                            Create model structure
+                        </button>
+                    </li>
+                    <li>
+                        <button tabindex='50' type="button" class="action action-upload"
+                                value="Import model structure" name="import"
+                                onclick='showModelUploadOverlay();'>Import model structure
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+</form>
+

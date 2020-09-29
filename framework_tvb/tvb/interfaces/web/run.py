@@ -75,6 +75,8 @@ from tvb.interfaces.web.controllers.spatial.surface_stimulus_controller import S
 from tvb.interfaces.web.controllers.spatial.local_connectivity_controller import LocalConnectivityController
 from tvb.interfaces.web.controllers.burst.noise_configuration_controller import NoiseConfigurationController
 from tvb.interfaces.web.controllers.simulator_controller import SimulatorController
+from tvb.interfaces.web.controllers.tools.tools_controller import ToolsController
+from tvb.interfaces.web.controllers.tools.dsl_controller import DSLController
 
 LOGGER = get_logger('tvb.interfaces.web.run')
 CONFIG_EXISTS = not TvbProfile.is_first_run()
@@ -112,6 +114,8 @@ def init_cherrypy(arguments=None):
     cherrypy.tree.mount(LocalConnectivityController(), "/spatial/localconnectivity/", config=CONFIGUER)
     cherrypy.tree.mount(NoiseConfigurationController(), "/burst/noise/", config=CONFIGUER)
     cherrypy.tree.mount(HPCController(), "/hpc/", config=CONFIGUER)
+    cherrypy.tree.mount(ToolsController(),"/tools/", config=CONFIGUER)
+    cherrypy.tree.mount(DSLController(),"/tools/dsl/", config=CONFIGUER)
 
     cherrypy.config.update(CONFIGUER)
 

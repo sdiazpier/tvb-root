@@ -1,0 +1,40 @@
+<link rel="stylesheet" type="text/css" href="/static/style/overlay.css?{{ currentVersionJS }}">
+<script type="text/javascript" src="/static/js/genericTVB.js?{{ currentVersionJS }}"></script>
+<form id="edit-data" method="post">
+    <div class="metadata-body">
+        
+        <fieldset>
+            <legend>Input Parameters</legend>
+
+            <dl>
+                {% for key, value in nodeFields.items() %}
+                    {% if key not in noVisibleFields %}
+                        <dt class="">
+                            <label for="{{ key }}" >{{ key }}</label>
+                        </dt>
+                        <dd>
+                            <p class="field-data">
+                                <input id="{{ key }}" type="text" name="{{ key }}"
+                                       class="inputField" tabindex="3"
+                                       value="{{ value }}"/>
+                            </p>
+                        </dd>
+                    {% else %}
+                         <input id="{{ key }}" type="hidden" name="{{ key }}"
+                               class="inputField" tabindex="3"
+                               value="{{ value }}"/>
+
+                    {% endif %}
+
+                {% endfor %}
+            </dl>
+        </fieldset>
+
+    </div>
+    <div class="row" align="right">
+        <button type="button" value="Save" tabindex="4"
+                onclick="overlaySubmitPart('edit-data', 'null');"
+                class="action action-confirm" title="Submit current changes to node attributes">Save
+        </button>
+    </div>
+</form>
