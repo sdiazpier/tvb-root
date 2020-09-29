@@ -1,6 +1,6 @@
 
-# The Virtual Brain
-
+# The Virtual Brain 
+ 
 "The Virtual Brain" Project (TVB Project) has the purpose of offering 
 modern tools to the Neurosciences community, for computing, simulating
 and analyzing functional and structural data of human brains, brains modeled 
