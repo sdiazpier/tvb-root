@@ -29,7 +29,6 @@
 #
 
 import threading
-
 from cherrypy.lib.static import serve_file
 from tvb.adapters.datatypes.db.simulation_history import SimulationHistoryIndex
 from tvb.adapters.exporters.export_manager import ExportManager
@@ -44,18 +43,19 @@ from tvb.adapters.simulator.simulator_fragments import *
 from tvb.config.init.introspector_registry import IntrospectionRegistry
 from tvb.core.adapters.abcadapter import ABCAdapter
 from tvb.core.entities.file.files_helper import FilesHelper
-from tvb.core.entities.file.simulator.view_model import SimulatorAdapterModel, IntegratorStochasticViewModel, \
-    AdditiveNoiseViewModel, BoldViewModel, RawViewModel
+from tvb.core.entities.file.simulator.view_model import SimulatorAdapterModel, IntegratorStochasticViewModel
+from tvb.core.entities.file.simulator.view_model import AdditiveNoiseViewModel, BoldViewModel, RawViewModel
+from tvb.core.entities.load import load_entity_by_gid
 from tvb.core.entities.model.model_burst import BurstConfiguration
 from tvb.core.entities.storage import dao
 from tvb.core.neocom import h5
 from tvb.core.services.burst_service import BurstService
 from tvb.core.services.exceptions import BurstServiceException, ServicesBaseException
+from tvb.core.services.operation_service import OperationService
 from tvb.core.services.simulator_service import SimulatorService
 from tvb.interfaces.web.controllers.autologging import traced
 from tvb.interfaces.web.controllers.burst.base_controller import BurstBaseController
 from tvb.interfaces.web.controllers.decorators import *
-from tvb.interfaces.web.controllers.flow_controller import FlowController
 
 GET_REQUEST = 'GET'
 POST_REQUEST = 'POST'
@@ -242,9 +242,7 @@ class SimulatorController(BurstBaseController):
         self.last_loaded_form_url = current_url
         common.add2session(common.KEY_LAST_LOADED_FORM_URL, self.last_loaded_form_url)
 
-    @cherrypy.expose
-    @handle_error(redirect=False)
-    @check_user
+    @expose_json
     def cancel_or_remove_burst(self, burst_id):
         """
         Cancel or Remove the burst entity given by burst_id (and all linked entities: op, DTs)
@@ -261,7 +259,24 @@ class SimulatorController(BurstBaseController):
             op_id = burst_configuration.fk_operation_group
             is_group = 1
 
-        return FlowController().cancel_or_remove_operation(op_id, is_group, remove_after_stop)
+        return self.cancel_or_remove_operation(op_id, is_group, remove_after_stop)
+
+    def cancel_or_remove_operation(self, operation_id, is_group, remove_after_stop=False):
+        """
+        Stop the operation given by operation_id. If is_group is true stop all the
+        operations from that group.
+        """
+        # Load before we remove, to have its data in memory here
+        burst_config = BurstService.get_burst_for_operation_id(operation_id, is_group)
+        result = OperationService.stop_operation(operation_id, is_group, remove_after_stop)
+
+        if remove_after_stop:
+            current_burst = common.get_from_session(common.KEY_BURST_CONFIG)
+            if (current_burst is not None and burst_config is not None and current_burst.id == burst_config.id and
+                    ((current_burst.fk_simulation == operation_id and not is_group) or
+                     (current_burst.fk_operation_group == operation_id and is_group))):
+                self.reset_simulator_configuration()
+        return result
 
     @expose_page
     @settings
@@ -364,7 +379,7 @@ class SimulatorController(BurstBaseController):
 
     @staticmethod
     def _prepare_cortex_fragment(session_stored_simulator, rendering_rules):
-        surface_index = ABCAdapter.load_entity_by_gid(session_stored_simulator.surface.surface_gid)
+        surface_index = load_entity_by_gid(session_stored_simulator.surface.surface_gid)
         rm_fragment = SimulatorRMFragment('', common.get_current_project().id, surface_index,
                                           session_stored_simulator.connectivity)
         rm_fragment.fill_from_trait(session_stored_simulator.surface)
@@ -713,7 +728,8 @@ class SimulatorController(BurstBaseController):
         if not next_monitor:
             return self._prepare_final_fragment(session_stored_simulator, rendering_rules)
 
-        next_form = get_form_for_monitor(type(next_monitor))(session_stored_simulator, '', common.get_current_project().id)
+        next_form = get_form_for_monitor(type(next_monitor))(session_stored_simulator, '',
+                                                             common.get_current_project().id)
         next_form.fill_from_trait(next_monitor)
 
         form_action_url = self.build_monitor_url(SimulatorWizzardURLs.SET_MONITOR_PARAMS_URL,
@@ -933,7 +949,7 @@ class SimulatorController(BurstBaseController):
             count = dao.count_bursts_with_name(parent_burst.name, session_burst_config.fk_project)
             session_burst_config.name = parent_burst.name + "_" + launch_mode + str(count + 1)
             simulation_state_index = dao.get_generic_entity(SimulationHistoryIndex,
-                                                            parent_burst.id, "fk_parent_burst")
+                                                            parent_burst.gid, "fk_parent_burst")
             if simulation_state_index is None or len(simulation_state_index) < 1:
                 exc = BurstServiceException("Simulation State not found for %s, thus we are unable to branch from "
                                             "it!" % session_burst_config.name)

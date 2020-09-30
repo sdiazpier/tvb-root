@@ -163,7 +163,6 @@ class DSLController(ToolsController):
 
     def generateXML(self):
 
-        print("Go!")
         try:
             lems = Xml.Element("Lems", attrib=self.dictModelInfo[self.userID])
             for key_layer1,val_layer1 in self.dictStructuredIDs[self.userID].items():

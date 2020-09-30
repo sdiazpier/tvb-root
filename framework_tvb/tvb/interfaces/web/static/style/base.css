@@ -509,7 +509,6 @@ background-image: url("./img/nav/img_ss_generic4.png");
 header nav li#nav-stimulus-surfacemodel {
 background-image: url("./img/nav/img_ss_generic5.png");
 }
-
 header nav li#nav-tools-dsl {
 background-image: url("./img/nav/img_ss_generic6.png");
 }
@@ -579,9 +578,11 @@ header nav li#nav-connectivity-allen {
 background-image: url("./img/nav/img_ss_generic3.png");
 }
 
+/* TODO: Real nav images for section TOOLS */
 header nav li#nav-tools-dsl {
 background-image: url("./img/nav/img_ss_generic4.png");
 }
+
 /* !-------------------------------------------- */
 /* !COMPONENT: Header Back button */
 /* !-------------------------------------------- */

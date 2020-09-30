@@ -47,7 +47,7 @@ from tvb.adapters.datatypes.db.time_series import TimeSeriesIndex
 from tvb.analyzers.metrics_base import BaseTimeseriesMetricAlgorithm
 from tvb.basic.neotraits.api import List
 from tvb.config import choices, ALGORITHMS
-from tvb.core.adapters.abcadapter import ABCAsynchronous, ABCAdapterForm
+from tvb.core.adapters.abcadapter import ABCAdapterForm, ABCAdapter
 from tvb.core.entities.file.simulator.datatype_measure_h5 import DatatypeMeasureH5
 from tvb.core.entities.filters.chain import FilterChain
 from tvb.core.neocom import h5
@@ -103,7 +103,7 @@ class TimeseriesMetricsAdapterForm(ABCAdapterForm):
         return FilterChain(fields=[FilterChain.datatype + '.data_ndim'], operations=["=="], values=[4])
 
 
-class TimeseriesMetricsAdapter(ABCAsynchronous):
+class TimeseriesMetricsAdapter(ABCAdapter):
     """
     TVB adapter for exposing as a group the measure algorithm.
     """
@@ -124,7 +124,7 @@ class TimeseriesMetricsAdapter(ABCAsynchronous):
         """
         Store the input shape to be later used to estimate memory usage.
         """
-        self.input_time_series_index = self.load_entity_by_gid(view_model.time_series.hex)
+        self.input_time_series_index = self.load_entity_by_gid(view_model.time_series)
         self.input_shape = (self.input_time_series_index.data_length_1d,
                             self.input_time_series_index.data_length_2d,
                             self.input_time_series_index.data_length_3d,

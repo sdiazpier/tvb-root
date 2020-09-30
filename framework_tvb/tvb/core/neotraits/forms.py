@@ -99,24 +99,15 @@ class Field(object):
 
     @property
     def value(self):
-        if str(self.data) == self.unvalidated_data:
+        if self.data is not None:
             return self.data
-        return self.data or self.unvalidated_data
+        return self.unvalidated_data
 
     def __repr__(self):
         return '<{}>(name={})'.format(type(self).__name__, self.name)
 
     def __str__(self):
         return jinja_env.get_template(self.template).render(field=self)
-
-
-class SimpleBoolField(Field):
-    template = 'form_fields/bool_field.html'
-
-    def _from_post(self):
-        if self.unvalidated_data is None:
-            self.data = False
-        self.data = bool(self.unvalidated_data)
 
 
 class SimpleStrField(Field):
@@ -132,21 +123,6 @@ class SimpleHiddenField(Field):
     template = 'form_fields/hidden_field.html'
 
 
-class SimpleIntField(Field):
-    template = 'form_fields/number_field.html'
-    min = None
-    max = None
-
-    def _from_post(self):
-        super(SimpleIntField, self)._from_post()
-        if self.unvalidated_data is None or self.unvalidated_data.strip() == '':
-            if self.required:
-                raise ValueError('Field required')
-            self.data = None
-        else:
-            self.data = int(self.unvalidated_data)
-
-
 class SimpleFloatField(Field):
     template = 'form_fields/number_field.html'
     input_type = "number"
@@ -156,12 +132,12 @@ class SimpleFloatField(Field):
 
     def _from_post(self):
         super(SimpleFloatField, self)._from_post()
-        if self.unvalidated_data is None or self.unvalidated_data.strip() == '':
-            if self.required:
-                raise ValueError('Field required')
-            self.data = None
-        else:
+        if self.unvalidated_data and len(self.unvalidated_data) == 0:
+            self.unvalidated_data = None
+        if self.unvalidated_data:
             self.data = float(self.unvalidated_data)
+        else:
+            self.data = None
 
 
 class TraitField(Field):

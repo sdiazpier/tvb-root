@@ -34,14 +34,15 @@
 
 import uuid
 from tvb.adapters.datatypes.db.connectivity import ConnectivityIndex
-from tvb.adapters.datatypes.db.surface import SurfaceIndex
 from tvb.adapters.datatypes.db.patterns import StimuliRegionIndex, StimuliSurfaceIndex
+from tvb.adapters.datatypes.db.surface import SurfaceIndex
 from tvb.adapters.simulator.equation_forms import get_form_for_equation
-from tvb.adapters.simulator.subforms_mapping import get_ui_name_to_equation_dict, GAUSSIAN_EQUATION
 from tvb.adapters.simulator.subforms_mapping import DOUBLE_GAUSSIAN_EQUATION, SIGMOID_EQUATION
+from tvb.adapters.simulator.subforms_mapping import get_ui_name_to_equation_dict, GAUSSIAN_EQUATION
 from tvb.basic.neotraits.api import Attr
-from tvb.core.adapters.abcadapter import ABCSynchronous, ABCAdapterForm
+from tvb.core.adapters.abcadapter import ABCAdapterForm, AdapterLaunchModeEnum, ABCAdapter
 from tvb.core.entities.filters.chain import FilterChain
+from tvb.core.entities.load import load_entity_by_gid
 from tvb.core.neocom import h5
 from tvb.core.neotraits.forms import FormField, SimpleStrField, TraitDataTypeSelectField, SelectField
 from tvb.core.neotraits.view_model import ViewModel, DataTypeGidAttr, Str
@@ -70,6 +71,11 @@ class SurfaceStimulusCreatorModel(ViewModel, StimuliSurface):
     surface = DataTypeGidAttr(
         linked_datatype=CorticalSurface,
         label=StimuliSurface.surface.label
+    )
+
+    display_name = Str(
+        label='Display name',
+        required=False
     )
 
 
@@ -129,7 +135,7 @@ class SurfaceStimulusCreatorForm(ABCAdapterForm):
                 'temporal_params_div': self.NAME_TEMPORAL_PARAMS_DIV, 'legend': 'Stimulus interface'}
 
 
-class SurfaceStimulusCreator(ABCSynchronous):
+class SurfaceStimulusCreator(ABCAdapter):
     """
     The purpose of this adapter is to create a StimuliSurface.
     """
@@ -137,6 +143,7 @@ class SurfaceStimulusCreator(ABCSynchronous):
     KEY_SPATIAL = 'spatial'
     KEY_TEMPORAL = 'temporal'
     KEY_FOCAL_POINTS_TRIANGLES = 'focal_points_triangles'
+    launch_mode = AdapterLaunchModeEnum.SYNC_SAME_MEM
 
     def get_form_class(self):
         return SurfaceStimulusCreatorForm
@@ -156,7 +163,7 @@ class SurfaceStimulusCreator(ABCSynchronous):
         stimuli_surface.spatial = view_model.spatial
         stimuli_surface.temporal = view_model.temporal
 
-        surface_index = SurfaceStimulusCreator.load_entity_by_gid(view_model.surface.hex)
+        surface_index = load_entity_by_gid(view_model.surface)
         if load_full_surface:
             stimuli_surface.surface = h5.load_from_index(surface_index)
         else:
@@ -174,11 +181,9 @@ class SurfaceStimulusCreator(ABCSynchronous):
         """
         Used for creating a `StimuliSurface` instance
         """
+        self.generic_attributes.user_tag_1 = view_model.display_name
         stimuli_surface = self.prepare_stimuli_surface_from_view_model(view_model, view_model.surface)
-        stimuli_surface_index = StimuliSurfaceIndex()
-        stimuli_surface_index.fill_from_has_traits(stimuli_surface)
-
-        h5.store_complete(stimuli_surface, self.storage_path)
+        stimuli_surface_index = h5.store_complete(stimuli_surface, self.storage_path)
         return stimuli_surface_index
 
     def get_required_memory_size(self, view_model):
@@ -263,10 +268,11 @@ class RegionStimulusCreatorForm(ABCAdapterForm):
                 'temporal_params_div': self.NAME_TEMPORAL_PARAMS_DIV, 'legend': 'Stimulus interface'}
 
 
-class RegionStimulusCreator(ABCSynchronous):
+class RegionStimulusCreator(ABCAdapter):
     """
     The purpose of this adapter is to create a StimuliRegion.
     """
+    launch_mode = AdapterLaunchModeEnum.SYNC_SAME_MEM
 
     def get_form_class(self):
         return RegionStimulusCreatorForm
@@ -287,12 +293,9 @@ class RegionStimulusCreator(ABCSynchronous):
         stimuli_region.connectivity.gid = view_model.connectivity
         stimuli_region.weight = view_model.weight
         stimuli_region.temporal = view_model.temporal
-
-        stimuli_region_idx = StimuliRegionIndex()
-        stimuli_region_idx.fill_from_has_traits(stimuli_region)
         self.generic_attributes.user_tag_1 = view_model.display_name
 
-        h5.store_complete(stimuli_region, self.storage_path)
+        stimuli_region_idx = h5.store_complete(stimuli_region, self.storage_path)
         return stimuli_region_idx
 
     def get_required_disk_size(self, view_model):
