@@ -1,0 +1,92 @@
+
+/* Drag & Drop elements */
+.origin-draggable {
+  display: inline-block;
+  vertical-align: middle;
+  border: 1px solid #DFA612;
+  color: black;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-bottom: 2px;
+  margin-top: 1px;
+  padding: 10px;
+}
+
+.object-draggable {
+  text-align: center;
+  font-weight: normal;
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+.parent-dropzone {
+  width: 95%;
+  height: 90%;
+  margin-bottom: 0px;
+  min-height: 100px;
+  text-align: left;
+  padding: 5px;
+}
+.destiny-dropzone {
+  background-color: lightgray;
+  height: 100%
+  text-align: center;
+  flex-basis: 100%;
+  flex-grow: 10;
+  padding: 20px;
+  margin: 1px;
+}
+.bottom-three {
+     margin-bottom: 5px;
+}
+/*
+Shadow over draggable objets
+*/
+ .shadow {
+  -moz-box-shadow:    3px 3px 5px 3px #696969;
+  -webkit-box-shadow: 3px 3px 5px 3px #696969;
+  box-shadow:         3px 3px 5px 3px #696969;
+  border-radius:10%;
+  width:90px;
+  height:15px;
+  flex-basis: 100%;
+  flex-grow: 6;
+  padding: 10px;
+}
+/*
+TreeView simple
+*/
+
+ul.myUL {
+  list-style-type: none;
+  margin: 0;
+  padding: 3;
+}
+
+.caret {
+  cursor: pointer;
+  -webkit-user-select: none; /* Safari 3.1+ */
+  -moz-user-select: none; /* Firefox 2+ */
+  -ms-user-select: none; /* IE 10+ */
+  user-select: none;
+}
+
+.caret::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.caret-down::before {
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Safari */'
+  transform: rotate(90deg);
+}
+
+.nested {
+  display: none;
+}
+
+.active {
+  display: block;
+}

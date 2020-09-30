@@ -39,6 +39,12 @@
                 <a href="{{ connectivityTabLink if selectedProject else '#' }}" tabindex='-1' title="">Connectivity</a>
                 <span class="right"></span>
             </li>
+            <li tabindex='99' onkeypress="redirectToHrefChild(this)" id="nav-tools" class="{{ 'active ' if currentTab=='nav-tools' else '' }}{{ 'enabled' if selectedProject else 'idle' }}"
+            	title="{{ 'Select Tool' if selectedProject else 'Please select a working project first!' }}">
+                <span class="left"></span>
+                <a href="{{ '/tools/' if selectedProject else '#' }}" tabindex='-1' title="">Tools</a>
+                <span class="right"></span>
+            </li>
         </ul> 
     </nav> 
     <script type="text/javascript">

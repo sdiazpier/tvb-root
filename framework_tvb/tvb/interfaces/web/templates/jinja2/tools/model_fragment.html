@@ -1,0 +1,49 @@
+<h4><mark>Configure</mark> New Model</h4>
+<fieldset id="edit-general-data">
+    <dl>
+        <dt class="field-mandatory">
+            <label for="model_name">Model Name</label>
+        </dt>
+
+        <dd>
+            <p  class="field-data"><input tabindex='1' type="text" id="model_name" /></p>
+        </dd>
+
+        <dt>
+            <label for="model_description">Model description</label>
+        </dt>
+        <dd>
+            <p  class="field-data"><textarea id="model_description" tabindex='2'></textarea></p>
+        </dd>
+
+        <dt>
+            <label>Output language</label>
+        </dt>
+
+        <dd>
+            <select id="model_language">
+                <option value="Cuda">Cuda</option>
+                <option value="Python">Python</option>
+            </select>
+        </dd>
+    </dl>
+</fieldset>
+
+<h4><mark>Drag&Drop</mark> Components</h4>
+<fieldset>
+        <dt>
+            <label for="draggable_zone">Components</label>
+        </dt>
+        <dd>
+            <section id="draggable_zone">
+                <div class="origin-draggable">
+                    {% for name, val in mylista.items() %}
+                        <div id="{{ name }}" parent="{{ val }}" class="object-draggable shadow" draggable="true" ondragstart="onDragStart(event);">{{ name }}</div>
+                    {% endfor %}
+                </div>
+            </section>
+        </dd>
+
+    </dl>
+
+</fieldset>

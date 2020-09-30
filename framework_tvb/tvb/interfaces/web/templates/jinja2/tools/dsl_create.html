@@ -1,0 +1,41 @@
+<link rel="stylesheet" type="text/css" href="/static/style/base.css"/>
+<link rel="stylesheet" type="text/css" href="/static/style/tools.css"/>
+<script type="text/javascript" src="/static/js/tools/dsl_framework.js"></script>
+
+<form id="main" class="columnized colscheme-3-1st-narrow" method="post">
+
+    <section class="view-column col-1">
+        {% include 'tools/model_fragment.html' %}
+    </section>
+
+    <section class="view-column col-1">
+        {% include 'tools/dsl_create_leftpanel.html' %}
+    </section>
+    <section class="view-column col-2">
+        {% include 'tools/dsl_create_rightpanel.html' %}
+    </section>
+
+    <aside class="header-component toolbar can-extend auto-extends">
+        <div class="extension">
+            <div class="dropdown-pane">
+                <ul>
+                    <li>
+                        <button type="button" tabindex='50' class="action action-play" value="convert" name="convert" onclick="overlaySubmit('edit-general-data', 'null');">
+                            Convert
+                        </button>
+                    </li>
+                    <li>
+                        <button type="submit" tabindex='50' class="action action-confirm" value="Save" name="save">
+                            Save Changes
+                        </button>
+                    </li>
+                    <li class="action-dismiss">
+                        <button type="submit" tabindex='50' class="action action-cancel" value="Cancel" name="cancel">
+                            Cancel
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </aside>
+</form>

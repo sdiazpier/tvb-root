@@ -93,3 +93,4 @@ if __name__ == '__main__':
     # model_filename = 'Rwongwang'
     model_filename = 'Epileptor'
     cuda_templating(model_filename)
+    print("yeah")

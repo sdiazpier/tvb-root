@@ -41,6 +41,7 @@ class WebStructure(object):
     SECTION_ANALYZE = "analyze"
     SECTION_STIMULUS = "stimulus"
     SECTION_CONNECTIVITY = "connectivity"
+    SECTION_TOOLS = "tools"
 
     ### Subsections for USER section
     SUB_SECTION_LOGIN = "login"
@@ -94,6 +95,10 @@ class WebStructure(object):
     SUB_SECTION_LOCAL_CONNECTIVITY = "local"
     SUB_SECTION_ALLEN = "allen"
 
+    ### Subsections for TOOLS section
+    SUB_SECTION_TOOLS_MENU = "step"
+    SUB_SECTION_TOOLS_DSL_MODEL = "dsl"
+
     ### Subsections used under BURST and PROJECT sections.
     ### These subsections can extend, and depend on existing visualizers in the system.
     SUB_SECTION_VIEW_0 = "view_connectivity"
@@ -132,7 +137,8 @@ class WebStructure(object):
         SECTION_BURST: "Simulator",
         SECTION_ANALYZE: "Analyze",
         SECTION_STIMULUS: "Stimulus",
-        SECTION_CONNECTIVITY: 'Connectivity'}
+        SECTION_CONNECTIVITY: 'Connectivity',
+        SECTION_TOOLS:'Tools'}
 
 
     ### Texts to appear in HTML page headers as subsection-title.
@@ -183,6 +189,9 @@ class WebStructure(object):
         SUB_SECTION_CONNECTIVITY: "Large Scale",
         SUB_SECTION_LOCAL_CONNECTIVITY: "Local",
         SUB_SECTION_ALLEN: "Mouse",
+
+        SUB_SECTION_TOOLS_MENU: "",
+        SUB_SECTION_TOOLS_DSL_MODEL: "DSL",
 
         SUB_SECTION_VIEW_0: "Connectivity Visualizer",
         SUB_SECTION_VIEW_1: "Connectivity Edge Visualizer",
