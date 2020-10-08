@@ -39,15 +39,16 @@ LEMS2python module implements a DSL code generation using a TVB-specific LEMS-ba
 import os
 import tvb.simulator.models
 from mako.template import Template
-from tvb.basic.logger.builder import get_logger
+#from tvb.basic.logger.builder import get_logger
 from tvb.dsl.NeuroML.lems.model.model import Model
 
-logger = get_logger(__name__)
+#logger = get_logger(__name__)
 
 
 def default_lems_folder():
     here = os.path.dirname(os.path.abspath(__file__))
     xmlpath = os.path.join(here, 'NeuroML', 'XMLmodels')
+    print(' - Input folder -> ', xmlpath, "(xxx.xml)")
     return xmlpath
 
 
@@ -58,7 +59,6 @@ def lems_file(model_name, folder=None):
 
 def load_model(model_filename, folder=None):
     "Load model from filename"
-
     fp_xml = lems_file(model_filename, folder)
 
     # instantiate LEMS lib
@@ -67,10 +67,17 @@ def load_model(model_filename, folder=None):
 
     # do some inventory. check if boundaries are set for any sv to print the boundaries section in template
     svboundaries = 0
-    for i, sv in enumerate(model.component_types[model_filename].dynamics.state_variables):
-        if sv.boundaries != 'None' and sv.boundaries != '' and sv.boundaries:
-            svboundaries = 1
-            continue
+
+    # check boundaries
+    if len(list(model.component_types)) > 0 and \
+        model_filename in model.component_types and \
+        model.component_types[model_filename].dynamics != None:
+
+        for i, sv in enumerate(model.component_types[model_filename].dynamics.state_variables):
+            print(i,sv)
+            if sv.boundaries != 'None' and sv.boundaries != '' and sv.boundaries:
+                svboundaries = 1
+                continue
 
     return model, svboundaries
 
@@ -79,19 +86,34 @@ def default_template():
     here = os.path.dirname(os.path.abspath(__file__))
     tmp_filename = os.path.join(here, 'tmpl8_regTVB.py')
     template = Template(filename=tmp_filename)
+    print('Using default template tmpl8_regTVB.py', here)
     return template
 
 
 def render_model(model_name, template=None, folder=None):
     model, svboundaries = load_model(model_name, folder)
     template = template or default_template()
-    model_str = template.render(
-        dfunname=model_name,
-        const=model.component_types[model_name].constants,
-        dynamics=model.component_types[model_name].dynamics,
-        svboundaries=svboundaries,
-        exposures=model.component_types[model_name].exposures
-    )
+    model_str = ''
+    try:
+        if model_name in model.component_types and \
+            len(list(model.component_types[model_name].constants)) >= 0 and \
+            model.component_types[model_name].dynamics != None and \
+            len(list(model.component_types[model_name].exposures)) >= 0:
+
+            model_str = template.render(
+                dfunname=model_name,
+                const=model.component_types[model_name].constants,
+                dynamics=model.component_types[model_name].dynamics,
+                svboundaries=svboundaries,
+                exposures=model.component_types[model_name].exposures
+            )
+        else:
+            raise ValueError('It does not pass the LEM validation.')
+
+    except Exception as e:
+        print('Error, ', e)
+
+
     return model_str
 
 
@@ -108,19 +130,22 @@ def regTVB_templating(model_filename, folder=None):
         montbriot.xml
         reducedwongwangt.xml
     """
-
-    # file locations
-    modelfile = os.path.join(os.path.dirname(tvb.simulator.models.__file__), model_filename.lower() + '.py')
-
-    # start templating
-    model_str = render_model(model_filename, template=default_template(), folder=folder)
-
-    # write templated model to file
-    with open(modelfile, "w") as f:
-        f.writelines(model_str)
-
-    # write new model to init.py such it is familiar to TVB if not already present
     try:
+        # file locations
+        modelfile = os.path.join(os.path.dirname(tvb.simulator.models.__file__), model_filename.lower() + '.py')
+        print(" - Output folder -> ",os.path.join(os.path.dirname(tvb.simulator.models.__file__)))
+        # start templating
+        model_str = render_model(model_filename, template=default_template(), folder=folder)
+
+        if len(model_str) == 0:
+            raise("Incorrect format or Minimal number of components")
+
+        # write templated model to file
+        with open(modelfile, "w") as f:
+            f.writelines(model_str)
+
+        # write new model to init.py such it is familiar to TVB if not already present
+
         doprint = True
         modelenumnum = 0
         modulemodnum = 0
@@ -140,11 +165,21 @@ def regTVB_templating(model_filename, folder=None):
                 f.truncate(0)
                 f.seek(0)
                 f.writelines(lines)
-            logger.info("model file generated {}".format(modelfile))
+            #logger.info("model file generated {}".format(modelfile))
+            print("model file generated")
+        return True
     except IOError as e:
-        logger.error('ioerror: %s', e)
+        #logger.error('ioerror: %s', e)
+        print(e)
+        return False
+
+
 
 
 if __name__ == "__main__":
     # example run for ReducedWongWang model
-    regTVB_templating('ReducedWongWangT', './NeuroML/XMLmodels/')
+    #regTVB_templating('ReducedWongWangT', './NeuroML/XMLmodels/')
+
+    basepath = os.path.join(os.getenv("HOME"), 'tvb_temporal_folder')
+    #filepath = os.path.join(basepath, 'modelito.xml')
+    #regTVB_templating('caca1',basepath)

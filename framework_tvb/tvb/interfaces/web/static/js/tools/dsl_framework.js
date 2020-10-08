@@ -5,7 +5,9 @@ var last_Dynamic_id = 0;
 var arrayTreeIds = [];
 var arrayListIds = [];
 var component_count = 0 ;
-
+var colorLevel1 = "#ffa726";
+var colorLevel2 = "#ffca28";
+var colorLevel3 = "#ffee58";
 function onDragStart(event) {
     event.dataTransfer.setData('text/plain', event.target.id);
 }
@@ -32,7 +34,6 @@ function onDrop(event) {
 
     var parent = clone.getAttribute('parent');
 
-
     if(parent === "Dynamics" && last_Dynamic_id == 0){
         alert("There is not Dynamic Component!" + last_Dynamic_id);
         return;
@@ -54,12 +55,12 @@ function onDrop(event) {
         last_Dynamic_id = component_count;
     }
 
-    var myUL = document.getElementById("myUL");
     var nodetext = document.createTextNode(component_name +'-'+component_count);
 
-    var parentId = "none"
+    var parentId = 0;
     //Principal Component
-    if (parent === "none"){
+
+    if (component_name === "ComponentType" || component_name === "Dynamics"){
 
         //prepare main component
         var span = document.createElement("span");
@@ -70,7 +71,6 @@ function onDrop(event) {
           this.classList.toggle("caret-down");
         });
 
-
         //set the name
         var node = document.createElement("li");
         node.id = treenode_id;
@@ -79,36 +79,52 @@ function onDrop(event) {
         //set a container
         var subnodes = document.createElement("UL");
         subnodes.className = "nested";
-        subnodes.id = 'list';
+        subnodes.id = 'list'.concat(treenode_id);
 
         node.appendChild(subnodes);
-        myUL.appendChild(node);
-        clone.style.backgroundColor = "yellow";
+        if(component_name === "Dynamics"){
+            if(last_ComponentType_id > 0){
+                var myUL = document.getElementById("list" + last_ComponentType_id);
+                myUL.appendChild(node);
+                clone.style.backgroundColor = colorLevel2;
+
+                parentId = last_ComponentType_id;
+            }else{
+                alert("Please, add a ComponentType first");
+            }
+
+        }else{
+            var myUL = document.getElementById("myUL");
+            myUL.appendChild(node);
+            clone.style.backgroundColor = colorLevel1;
+        }
 
     } else{
-        //document.getElementById(id).getElementsByTagName('caret')
+
+        //set the name
+        var node = document.createElement("li");
+        node.id = treenode_id;
+        node.append(nodetext);
+
+
         if(parent === "ComponentType"){
             parent = document.getElementById(last_ComponentType_id);
             parentId = last_ComponentType_id;
+
         } else if (parent === "Dynamics"){
             parent = document.getElementById(last_Dynamic_id);
             parentId = last_Dynamic_id;
         } else{
             return;
         }
-
-        //set the name
-        var node = document.createElement("li");
-        node.id = treenode_id;
-        node.append(nodetext);
-        //parent.append(node);
-
-        list = parent.querySelector('#list');
+        list = parent.querySelector("#list" + parentId);
         list.appendChild(node);
+
     }
 
     //If everything was ok, the draggable object is dropped
     event.target.appendChild(clone);
+
     showProperties(treenode_id, component_name, parentId );
 
     // TODO: Add principal component to the controller
@@ -187,15 +203,14 @@ function overlaySubmit(formToSubmitId, backPage) {
             url: "/tools/dsl/convertdata",
             data: submitableData,
             success: function (response) {
-                displayMessage("Data successfully exported!");
-                alert("Data successfully exported!");
+                alert(response);
             },
             error: function () {
                 displayMessage("Error!", "errorMessage");
             }
         });
     } else{
-        alert("Incomplete fields");
+        alert("Please provide a name");
     }
 
 }

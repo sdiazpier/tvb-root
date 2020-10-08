@@ -10,8 +10,8 @@ from lems.model.model import Model
 
 def default_lems_folder():
     here = os.path.dirname(os.path.abspath(__file__))
-    print('\n here', here, '\n')
     xmlpath = os.path.join(here, 'XMLmodels')
+    print(' - Input folder -> ', xmlpath, "(xxx_CUDA.xml)")
     return xmlpath
 
 def lems_file(model_name, folder=None):
@@ -77,6 +77,7 @@ def render_model(model_name, template=None, folder=None):
 
 def cuda_templating(model_filename, folder=None):
 
+    print(' - Output folder -> ', os.path.join((os.path.dirname(os.path.abspath(__file__))), 'CUDAmodels'))
     modelfile = os.path.join((os.path.dirname(os.path.abspath(__file__))), 'CUDAmodels', model_filename.lower() + '.c')
 
     # start templating
@@ -93,4 +94,3 @@ if __name__ == '__main__':
     # model_filename = 'Rwongwang'
     model_filename = 'Epileptor'
     cuda_templating(model_filename)
-    print("yeah")
