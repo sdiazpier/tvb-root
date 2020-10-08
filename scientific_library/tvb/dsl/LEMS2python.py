@@ -39,16 +39,16 @@ LEMS2python module implements a DSL code generation using a TVB-specific LEMS-ba
 import os
 import tvb.simulator.models
 from mako.template import Template
-#from tvb.basic.logger.builder import get_logger
+from tvb.basic.logger.builder import get_logger
 from tvb.dsl.NeuroML.lems.model.model import Model
 
-#logger = get_logger(__name__)
+logger = get_logger(__name__)
 
 
 def default_lems_folder():
     here = os.path.dirname(os.path.abspath(__file__))
     xmlpath = os.path.join(here, 'NeuroML', 'XMLmodels')
-    print(' - Input folder -> ', xmlpath, "(xxx.xml)")
+    logger.info(' - Input folder -> %s ',xmlpath, "(xxx.xml)")
     return xmlpath
 
 
@@ -74,7 +74,6 @@ def load_model(model_filename, folder=None):
         model.component_types[model_filename].dynamics != None:
 
         for i, sv in enumerate(model.component_types[model_filename].dynamics.state_variables):
-            print(i,sv)
             if sv.boundaries != 'None' and sv.boundaries != '' and sv.boundaries:
                 svboundaries = 1
                 continue
@@ -86,20 +85,30 @@ def default_template():
     here = os.path.dirname(os.path.abspath(__file__))
     tmp_filename = os.path.join(here, 'tmpl8_regTVB.py')
     template = Template(filename=tmp_filename)
-    print('Using default template tmpl8_regTVB.py', here)
+    logger.info('Using default template tmpl8_regTVB.py, %s', here)
     return template
+
+def checkValidation(model_name, model):
+    if model_name not in model.component_types:
+        return "Model name is not in the component"
+    elif len(list(model.component_types[model_name].constants)) == 0:
+        return "Constant is missing!"
+    elif model.component_types[model_name].dynamics == None:
+        return "Model does not containt Dynamics"
+    elif len(list(model.component_types[model_name].exposures)) == 0:
+        return "There is not Exposures"
+    else:
+        return ""
 
 
 def render_model(model_name, template=None, folder=None):
+
     model, svboundaries = load_model(model_name, folder)
     template = template or default_template()
     model_str = ''
     try:
-        if model_name in model.component_types and \
-            len(list(model.component_types[model_name].constants)) >= 0 and \
-            model.component_types[model_name].dynamics != None and \
-            len(list(model.component_types[model_name].exposures)) >= 0:
-
+        validation = checkValidation(model_name, model)
+        if len(validation) == 0:
             model_str = template.render(
                 dfunname=model_name,
                 const=model.component_types[model_name].constants,
@@ -107,14 +116,14 @@ def render_model(model_name, template=None, folder=None):
                 svboundaries=svboundaries,
                 exposures=model.component_types[model_name].exposures
             )
+            return True, model_str
         else:
-            raise ValueError('It does not pass the LEM validation.')
+            model_str = validation
 
     except Exception as e:
-        print('Error, ', e)
+        logger.error('Error %s', e)
 
-
-    return model_str
+    return False, 'LEM validation. ' + model_str
 
 
 def regTVB_templating(model_filename, folder=None):
@@ -133,12 +142,12 @@ def regTVB_templating(model_filename, folder=None):
     try:
         # file locations
         modelfile = os.path.join(os.path.dirname(tvb.simulator.models.__file__), model_filename.lower() + '.py')
-        print(" - Output folder -> ",os.path.join(os.path.dirname(tvb.simulator.models.__file__)))
+        logger.info(" - Output folder -> %s", os.path.join(os.path.dirname(tvb.simulator.models.__file__)))
         # start templating
-        model_str = render_model(model_filename, template=default_template(), folder=folder)
+        validation, model_str = render_model(model_filename, template=default_template(), folder=folder)
 
-        if len(model_str) == 0:
-            raise("Incorrect format or Minimal number of components")
+        if not validation:
+            return model_str
 
         # write templated model to file
         with open(modelfile, "w") as f:
@@ -165,13 +174,11 @@ def regTVB_templating(model_filename, folder=None):
                 f.truncate(0)
                 f.seek(0)
                 f.writelines(lines)
-            #logger.info("model file generated {}".format(modelfile))
-            print("model file generated")
-        return True
-    except IOError as e:
-        #logger.error('ioerror: %s', e)
-        print(e)
-        return False
+            logger.info("model file generated {}".format(modelfile))
+        return ""
+    except Exception as e:
+        logger.error('Error: %s', e)
+        return e
 
 
 

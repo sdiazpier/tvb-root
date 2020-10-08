@@ -1,7 +1,6 @@
 import cherrypy, os
 import tvb
 from tvb.dsl.LEMS2python import regTVB_templating
-from tvb.dsl.NeuroML.lems.parser.LEMS import LEMSFileParser
 from tvb.basic.logger.builder import get_logger
 from tvb.core.services.exceptions import ServicesBaseException
 from tvb.core.services.operation_service import OperationService
@@ -10,30 +9,6 @@ from tvb.interfaces.web.controllers.decorators import expose_page, using_templat
     handle_error, check_user
 from tvb.interfaces.web.controllers.tools.tools_controller import ToolsController
 import xml.etree.cElementTree as Xml
-
-def check_LEM_file(filename, path):
-    try:
-        print("Go!")
-        #path=['/home/aaron/projects/gui-cuda-dsl/tvb-root/tvb-root/scientific_library/tvb/dsl/NeuroML/XMLmodels']
-
-        filepath = os.path.join(path, 'modelito.xml')
-        path = [path]
-        parser = LEMSFileParser(model=filename,include_dirs=path,include_includes=True)
-        #filepath = os.path.join(path, filename.lower() + '.xml')
-
-
-        print("test",path)
-        print("test",filepath)
-
-        print("Validating ->",filepath)
-        with open(filepath) as f:
-            print("Validating ->", "IN1")
-            parser.parse(f.read())
-            print("Validating ->", "IN2")
-            print("Validation Ok")
-    except Exception as ex:
-        print(ex)
-
 
 class DSLController(ToolsController):
     def __init__(self):
@@ -91,13 +66,16 @@ class DSLController(ToolsController):
             for key, value in data.items():
                 if(len(key) > 0):
                     self.dictModelInfo[self.userID][key] = value
-            if(self.generateXML()):
+
+            validation, msg = self.generateXML()
+            if validation:
                 return "Converted file!"
+            else:
+                return "Could not convert data! \n" + msg
 
         except Exception as excep:
             self.logger.error("Could not convert data! ", excep)
 
-        return "Could not convert data!"
 
     @cherrypy.expose
     @handle_error(redirect=False)
@@ -105,7 +83,6 @@ class DSLController(ToolsController):
     def updatedata(self, **data):
 
         try:
-            print(data)
             string = ''
             nodedict={}
             for k,v in data.items():
@@ -184,8 +161,7 @@ class DSLController(ToolsController):
                 raise cherrypy.HTTPRedirect('/tools/dsl')
 
         except Exception as excep:
-            self.logger.debug(str(excep))
-            print(str(excep))
+            self.logger.error(str(excep))
             raise cherrypy.HTTPRedirect('/tools/dsl')
 
         template_specification = dict(mainContent="tools/dsl_create", title="RateML Framework",
@@ -217,14 +193,11 @@ class DSLController(ToolsController):
 
                 # Subcomponents
                 for key_layer2, val_layer2 in val_layer1.items():
-                    print("key2:", key_layer2, "value2:", val_layer2)
-
                     sub = Xml.SubElement(comp, self.dictAll[self.userID][key_layer2]['type'],
                                    attrib=self.dictEsencial[self.userID][key_layer2])
 
                     # Sub-Subcomponents
                     for key_layer3, val_layer3 in val_layer2.items():
-                        print("key3:", key_layer3, "value3:", val_layer3)
                         Xml.SubElement(sub, self.dictAll[self.userID][key_layer3]['type'],
                                              attrib=self.dictEsencial[self.userID][key_layer3])
 
@@ -234,20 +207,21 @@ class DSLController(ToolsController):
             #Store the XML file
             filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name']+'.xml')
             tree.write(filepath)
-            print("Generated XML file!")
-            print(filepath)
 
             if self.dictModelInfo[self.userID]['language'].lower() == 'cuda':
                 # Todo Calling the Framework DSL_CUDA
-                print("Functionality Not implemented!")
+                self.logger.info("Functionality Not implemented!")
 
             elif self.dictModelInfo[self.userID]['language'].lower() == 'python':
                 # Calling the RateML Framework
-                print("Generating model in Python ...", self.dictModelInfo[self.userID]['name'])
-                return regTVB_templating(self.dictModelInfo[self.userID]['name'], self.basepath)
+                self.logger.info("Generating model in Python ... %s", self.dictModelInfo[self.userID]['name'])
+                msg = regTVB_templating(self.dictModelInfo[self.userID]['name'], self.basepath)
+
+                if len(msg) == 0:
+                    return True, ""
+                else:
+                    return False, msg
 
         except Exception as excep:
-            self.logger.debug(str(excep))
-            print(str(excep))
-
-        return False
+            self.logger.error(str(excep))
+            return False, "Internal exception"
