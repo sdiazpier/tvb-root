@@ -2,11 +2,16 @@
 var last_ComponentType_id = 0;
 var last_Dynamic_id = 0;
 
+var selectedOptions = ""
+
 var arrayTreeIds = [];
 var arrayListIds = [];
 var component_count = 0 ;
 var colorLevel1 = "#ffa726";
+var colorLevel1a = "#ffd699";
 var colorLevel2 = "#ffca28";
+var colorLevel2a = "#ffee58";
+
 var colorLevel3 = "#ffee58";
 function onDragStart(event) {
     event.dataTransfer.setData('text/plain', event.target.id);
@@ -106,14 +111,15 @@ function onDrop(event) {
         node.id = treenode_id;
         node.append(nodetext);
 
-
         if(parent === "ComponentType"){
             parent = document.getElementById(last_ComponentType_id);
             parentId = last_ComponentType_id;
+            node.style.backgroundColor = colorLevel1a;
 
         } else if (parent === "Dynamics"){
             parent = document.getElementById(last_Dynamic_id);
             parentId = last_Dynamic_id;
+            node.style.backgroundColor = colorLevel2a;
         } else{
             return;
         }
@@ -155,7 +161,8 @@ for (i = 0; i < toggler.length; i++) {
 // Popup Windows
 function showProperties(newID, component_name, parent ){
     closeOverlay(); // If there was overlay opened, just close it
-    showOverlay("/tools/dsl/details_model_overlay/" + newID +"/"+ component_name +"/"+ parent, true);
+    var language = document.getElementById('model_language').selectedOptions[0].value;
+    showOverlay("/tools/dsl/details_model_overlay/" + language.toLowerCase() + "/" + newID +"/"+ component_name +"/"+ parent, true);
 }
 
 // OPERATIONS WITH INDEXES
@@ -254,3 +261,81 @@ function closeAndRefreshTreeView(id, parent, response) {
     closeOverlay();
 }
 
+// Operations with DrowDownList
+
+function changeFunc(){
+    var selectedOption = document.getElementById('model_language').selectedOptions[0].value;
+    var container = document.getElementById("draggable_zone-container");
+    var currentOption = container.getAttribute("option");
+
+    if (currentOption.toLowerCase() !== selectedOption.toLowerCase()){
+        //alert("currentOption:"+currentOption+"<>selectedOption:"+selectedOption);
+        alert("If you change the selection the unsaved data will be lost!,\n are you sure?.")
+    }
+
+    var components = callData("getComponents",selectedOption);
+    //alert(components);
+    container.textContent = '';
+    for(var key in components){
+        if (components.hasOwnProperty(key)){
+            var value = components[key];
+            //<div id="{{ name }}" parent="{{ val "ob}}" class=ject-draggable shadow" draggable="true" ondragstart="onDragStart(event);">{{ name }}</div>
+            //<div id="ComponentType" parent="" class="object-draggable shadow" draggable="true" ondragstart="onDragStart(event);">ComponentType</div>
+            var new_div = document.createElement('div');
+            var att = document.createAttribute("parent");
+            att.value = value;
+            new_div.id = key;
+            new_div.setAttribute("parent", "value");
+            new_div.innerHTML = key;
+            new_div.className = "object-draggable shadow";
+            new_div.draggable = "true";
+            new_div.addEventListener("dragstart", onDragStart);
+            new_div.setAttributeNode(att);
+            container.appendChild(new_div);
+        }
+    }
+    //components.foreach(comp){
+     //   var btn = document.createElement("BUTTON");
+      //  btn.innerHTML = "CLICK ME" + comp;
+       // container.appendChild(btn);
+    //};
+
+    //Do something
+    container.setAttribute("option", selectedOption);
+    forceRedrawComponent(container)
+
+    document.getElementById("test").innerHTML = "You selected: " + selectedOption;
+
+}
+
+function forceRedrawComponent(component){
+    var display = component.style.display;
+    component.style.display = 'none';
+    var offset = component.offsetHeight;
+    component.style.display = display;
+
+}
+function callData(subUrl,argument){
+    var dict = Object();
+    doAjaxCall({
+        async: false,
+        type: 'GET',
+        dataType: "json",
+        url: "/tools/dsl/getComponents/"+argument,
+        success: function (response) {
+
+            var components = JSON.parse(response); //JSON.parse(JSON.stringify(response));
+
+            for(var key in components){
+                if (components.hasOwnProperty(key)){
+                    var value = components[key];
+                    dict[key] = value;
+                }
+            }
+        },
+        error: function () {
+            alert("Error!, No data available!");
+        }
+    });
+    return JSON.parse(JSON.stringify(dict));;
+}

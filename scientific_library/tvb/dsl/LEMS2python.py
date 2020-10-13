@@ -103,10 +103,11 @@ def checkValidation(model_name, model):
 
 def render_model(model_name, template=None, folder=None):
 
-    model, svboundaries = load_model(model_name, folder)
-    template = template or default_template()
     model_str = ''
     try:
+        model, svboundaries = load_model(model_name, folder)
+        template = template or default_template()
+
         validation = checkValidation(model_name, model)
         if len(validation) == 0:
             model_str = template.render(

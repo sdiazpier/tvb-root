@@ -21,9 +21,10 @@
         </dt>
 
         <dd>
-            <select id="model_language">
-                <option value="Cuda">Cuda</option>
-                <option value="Python" selected>Python</option>
+            <select id="model_language" onchange="changeFunc();">
+                <option value="None" selected>Choose language</option>
+                <option value="Cuda" >Cuda</option>
+                <option value="Python">Python</option>
             </select>
         </dd>
     </dl>
@@ -35,13 +36,12 @@
             <label for="draggable_zone">Components</label>
         </dt>
         <dd>
-            <section id="draggable_zone">
-                <div class="origin-draggable">
-                    {% for name, val in mylista.items() %}
-                        <div id="{{ name }}" parent="{{ val }}" class="object-draggable shadow" draggable="true" ondragstart="onDragStart(event);">{{ name }}</div>
-                    {% endfor %}
-                </div>
-            </section>
+            <div id="parent-draggable_zone">
+                <section id="draggable_zone" >
+                    <div id="draggable_zone-container" class="origin-draggable" option = "">
+                    </div>
+                </section>
+            </div>
         </dd>
 
     </dl>

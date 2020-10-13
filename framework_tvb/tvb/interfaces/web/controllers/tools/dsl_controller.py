@@ -1,6 +1,6 @@
-import cherrypy, os
-import tvb
+import cherrypy, os, json
 from tvb.dsl.LEMS2python import regTVB_templating
+from tvb.dsl_cuda.LEMS2CUDA import cuda_templating
 from tvb.basic.logger.builder import get_logger
 from tvb.core.services.exceptions import ServicesBaseException
 from tvb.core.services.operation_service import OperationService
@@ -25,13 +25,22 @@ class DSLController(ToolsController):
         #self.basepath = os.path.join(os.path.dirname(tvb.__file__),'dsl','NeuroML','XMLmodels')
         self.basepath = os.path.join(os.getenv("HOME"),'tvb_temporal_folder')
 
-        self.xml_components={"ComponentType": "",
-         "Constant": "ComponentType",
-         "Exposure": "ComponentType",
-         "Dynamics": "ComponentType",
-         "StateVariable": "Dynamics",
-         "DerivedVariable": "Dynamics",
-         "TimeDerivative": "Dynamics"}
+        self.xml_components = dict()
+        self.xml_components["python"] = {"ComponentType": "",
+                                         "Constant": "ComponentType",
+                                         "Exposure": "ComponentType",
+                                         "Dynamics": "ComponentType",
+                                         "StateVariable": "Dynamics",
+                                         "DerivedVariable": "Dynamics",
+                                         "TimeDerivative": "Dynamics"}
+        self.xml_components["cuda"] = {"ComponentType": "",
+                                         "Constant": "ComponentType",
+                                         "Exposure": "ComponentType",
+                                         "Parameter": "ComponentType",
+                                         "DerivedParameter": "ComponentType",
+                                         "Dynamics": "ComponentType",
+                                         "StateVariable": "Dynamics",
+                                         "DerivedVariable": "Dynamics"}
 
         #ComponentType
         # - constant
@@ -41,7 +50,8 @@ class DSLController(ToolsController):
         self.dictComponentInfo = {'id': '', 'type': '', 'parent': ''}
 
         # TODO: get dynamically from LEMS
-        self.dictComponentType= {"ComponentType": {'name': '', 'description': '', 'value': ''},
+        self.dictComponentType = dict()
+        self.dictComponentType["python"] = {"ComponentType": {'name': '', 'description': '', 'value': ''},
                                 "Constant": {'name': '', 'domain': '', 'default': '', 'description': ''},
                                 "Exposure": {'name': '', 'choices': '', 'default': '', 'description': ''},
                                 "Dynamics": {'name': ''},
@@ -50,6 +60,15 @@ class DSLController(ToolsController):
                                 "ConditionalDerivedVariable": {'name': '', 'cases': '', 'condition': ''},
                                 "TimeDerivative": {'name': '', 'expression': ''}}
 
+        self.dictComponentType["cuda"] ={"ComponentType": {'name': '', 'description': '', 'value': ''},
+                                         "Constant": {'name': '', 'domain': '', 'default': '', 'description': ''},
+                                         "Exposure": {'name': '', 'choices': '', 'default': ''},
+                                         "Parameter": {'name': '', 'dimension': ''},
+                                         "DerivedParameter": {'name': '', 'expression': ''},
+                                         "Dynamics": {'name': ''},
+                                         "StateVariable": {'name': '', 'default': '', 'boundaries': ''},
+                                         "DerivedVariable": {'name': '', 'expression': ''}}
+
         #TODO: get the session id
         self.userID = 20
 
@@ -57,6 +76,17 @@ class DSLController(ToolsController):
         self.dictEsencial[self.userID] = {}
         self.dictStructuredIDs[self.userID] = {}
         self.dictModelInfo[self.userID] = {}
+
+    @cherrypy.expose
+    @handle_error(redirect=False)
+    @check_user
+    def getComponents(self, param):
+        try:
+            if len(str(param)) > 0:
+                return json.dumps(self.xml_components[str(param).lower()])
+        except Exception as excep:
+            self.logger.error("No data to provide! ", excep)
+
 
     @cherrypy.expose
     @handle_error(redirect=False)
@@ -128,12 +158,12 @@ class DSLController(ToolsController):
             return excep.message
 
     @expose_fragment("overlay")
-    def details_model_overlay(self,nodeId, component_name, parent):
+    def details_model_overlay(self,language, nodeId, component_name, parent):
         template_specification={}
         param = {'parent': parent, 'type': component_name, 'id': nodeId}
-        template_specification["nodeFields"] = dict(self.dictComponentType[component_name], **param)
+        template_specification["nodeFields"] = dict(self.dictComponentType[language][component_name], **param)
         template_specification["noVisibleFields"] =  self.dictComponentInfo.keys()
-        template_specification = self.fill_overlay_attributes(template_specification, "Setting parameters", nodeId,
+        template_specification = self.fill_overlay_attributes(template_specification, "Setting parameters", component_name +" for " + language + " Models.",
                                                               "tools/details_model_overlay","dialog-upload")
 
         return self.fill_default_attributes(template_specification)
@@ -144,7 +174,8 @@ class DSLController(ToolsController):
         if cherrypy.request.method == 'POST' and create:
             raise cherrypy.HTTPRedirect('/tools/dsl/dsl_create')
 
-        template_specification = dict(mainContent="tools/dsl_viewall", title="RateML Framework", mylista=self.xml_components)
+        template_specification = dict(mainContent="tools/dsl_viewall", title="RateML Framework", selectedOptions="")#,
+        #                              mylista=self.xml_components, selectedOptions="cuda")
         return self.fill_default_attributes(template_specification)
 
     @expose_page
@@ -164,8 +195,8 @@ class DSLController(ToolsController):
             self.logger.error(str(excep))
             raise cherrypy.HTTPRedirect('/tools/dsl')
 
-        template_specification = dict(mainContent="tools/dsl_create", title="RateML Framework",
-                                      mylista=self.xml_components)
+        template_specification = dict(mainContent="tools/dsl_create", title="RateML Framework", selectedOptions="")#,
+        #                              mylista=self.xml_components, selectedOptions="cuda")
         return self.fill_default_attributes(template_specification)
 
 
@@ -205,23 +236,36 @@ class DSLController(ToolsController):
             tree = Xml.ElementTree(lems)
 
             #Store the XML file
-            filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name']+'.xml')
+            filepath = ""
+            if (self.dictModelInfo[self.userID]['language'].lower() == 'cuda'):
+                filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name']+'_CUDA.xml')
+            elif (self.dictModelInfo[self.userID]['language'].lower() == 'python'):
+                filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name']+'.xml')
+            else:
+                raise("No Programing language implemented!")
+
             tree.write(filepath)
 
+            if not os.path.exists(filepath):
+                raise("No XML file generated")
+
+            msg = ""
             if self.dictModelInfo[self.userID]['language'].lower() == 'cuda':
                 # Todo Calling the Framework DSL_CUDA
-                self.logger.info("Functionality Not implemented!")
+                #self.logger.info("Functionality Not implemented!")
+                self.logger.info("Generating model in CUDA ... %s", self.dictModelInfo[self.userID]['name'])
+                msg = cuda_templating(self.dictModelInfo[self.userID]['name'], self.basepath)
 
             elif self.dictModelInfo[self.userID]['language'].lower() == 'python':
                 # Calling the RateML Framework
                 self.logger.info("Generating model in Python ... %s", self.dictModelInfo[self.userID]['name'])
                 msg = regTVB_templating(self.dictModelInfo[self.userID]['name'], self.basepath)
 
-                if len(msg) == 0:
-                    return True, ""
-                else:
-                    return False, msg
+            if len(msg) == 0:
+                return True, ""
+            else:
+                return False, msg
 
         except Exception as excep:
             self.logger.error(str(excep))
-            return False, "Internal exception"
+            return False, "Internal exception \n" + str(excep)
