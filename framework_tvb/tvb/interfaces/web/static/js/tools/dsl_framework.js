@@ -114,12 +114,12 @@ function onDrop(event) {
         if(parent === "ComponentType"){
             parent = document.getElementById(last_ComponentType_id);
             parentId = last_ComponentType_id;
-            node.style.backgroundColor = colorLevel1a;
+            clone.style.backgroundColor = colorLevel1a;
 
         } else if (parent === "Dynamics"){
             parent = document.getElementById(last_Dynamic_id);
             parentId = last_Dynamic_id;
-            node.style.backgroundColor = colorLevel2a;
+            clone.style.backgroundColor = colorLevel2a;
         } else{
             return;
         }
@@ -217,7 +217,7 @@ function overlaySubmit(formToSubmitId, backPage) {
             }
         });
     } else{
-        alert("Please provide a name");
+        alert("Please provide a Model Name");
     }
 
 }
@@ -237,6 +237,7 @@ function overlaySubmitPart(formToSubmitId, backPage) {
         url: "/tools/dsl/updatedata",
         data: submitableData,
         success: function (response) {
+            displayMessage("Data successfully stored! " + response);
             displayMessage("Data successfully stored! " + response);
             closeAndRefreshTreeView(id, parent, response);
         },
@@ -265,12 +266,27 @@ function closeAndRefreshTreeView(id, parent, response) {
 
 function changeFunc(){
     var selectedOption = document.getElementById('model_language').selectedOptions[0].value;
+    var parent_container = document.getElementById("parent-draggable_zone");
     var container = document.getElementById("draggable_zone-container");
     var currentOption = container.getAttribute("option");
 
-    if (currentOption.toLowerCase() !== selectedOption.toLowerCase()){
+
+    if(selectedOption === "None"){
+        parent_container.style.display = "none";
+    } else {
+        parent_container.style.display = "block";
+    }
+
+    if (currentOption !== "" && currentOption.toLowerCase() !== selectedOption.toLowerCase()){
         //alert("currentOption:"+currentOption+"<>selectedOption:"+selectedOption);
-        alert("If you change the selection the unsaved data will be lost!,\n are you sure?.")
+        var result = confirm("All data will be lost!,\n Are you sure?.");
+        if (result == true) {
+            removeAlltDropped();
+
+        } else{
+            selectedOption = currentOption;
+            document.getElementById('model_language').value = selectedOption;
+        }
     }
 
     var components = callData("getComponents",selectedOption);
@@ -294,17 +310,12 @@ function changeFunc(){
             container.appendChild(new_div);
         }
     }
-    //components.foreach(comp){
-     //   var btn = document.createElement("BUTTON");
-      //  btn.innerHTML = "CLICK ME" + comp;
-       // container.appendChild(btn);
-    //};
 
     //Do something
     container.setAttribute("option", selectedOption);
     forceRedrawComponent(container)
 
-    document.getElementById("test").innerHTML = "You selected: " + selectedOption;
+    //document.getElementById("test").innerHTML = "You selected: " + selectedOption;
 
 }
 

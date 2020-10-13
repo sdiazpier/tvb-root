@@ -37,6 +37,8 @@ LEMS2python module implements a DSL code generation using a TVB-specific LEMS-ba
 """
 
 import os
+from lxml import etree
+from urllib.request import urlopen
 import tvb.simulator.models
 from mako.template import Template
 from tvb.basic.logger.builder import get_logger
@@ -88,7 +90,19 @@ def default_template():
     logger.info('Using default template tmpl8_regTVB.py, %s', here)
     return template
 
-def checkValidation(model_name, model):
+def validate_LEMS_structure(filename, folder):
+    try:
+        xml_file_path = lems_file(filename, folder)
+        schema_file = urlopen("https://raw.githubusercontent.com/LEMS/LEMS/development/Schemas/LEMS/LEMS_v0.7.3.xsd")
+        xml_schema = etree.XMLSchema(etree.parse(schema_file))
+        print("Validating", filename,"against",schema_file.geturl())
+        xml_schema.assert_(etree.parse(xml_file_path))
+        return ""
+
+    except Exception as e:
+        return "XSD" + str(e)
+
+def checkValidation(model_name, model, folder):
     if model_name not in model.component_types:
         return "Model name is not in the component"
     elif len(list(model.component_types[model_name].constants)) == 0:
@@ -98,7 +112,7 @@ def checkValidation(model_name, model):
     elif len(list(model.component_types[model_name].exposures)) == 0:
         return "There is not Exposures"
     else:
-        return ""
+        return validate_LEMS_structure(model_name, folder)
 
 
 def render_model(model_name, template=None, folder=None):
@@ -108,7 +122,7 @@ def render_model(model_name, template=None, folder=None):
         model, svboundaries = load_model(model_name, folder)
         template = template or default_template()
 
-        validation = checkValidation(model_name, model)
+        validation = checkValidation(model_name, model, folder)
         if len(validation) == 0:
             model_str = template.render(
                 dfunname=model_name,
@@ -123,6 +137,7 @@ def render_model(model_name, template=None, folder=None):
 
     except Exception as e:
         logger.error('Error %s', e)
+        model_str = e
 
     return False, 'LEM validation. ' + model_str
 

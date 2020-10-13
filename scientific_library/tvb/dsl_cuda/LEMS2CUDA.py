@@ -1,7 +1,8 @@
 from mako.template import Template
 
-import os
-import sys
+import os,sys
+from lxml import etree
+from urllib.request import urlopen
 
 # not ideal but avoids modifying  the vendored LEMS itself
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -38,8 +39,19 @@ def load_model(model_filename, folder=None):
     # modelextended = model.resolve()
 
     return model
+def validate_LEMS_structure(filename, folder):
+    try:
+        xml_file_path = lems_file(filename, folder)
+        schema_file = urlopen("https://raw.githubusercontent.com/LEMS/LEMS/development/Schemas/LEMS/LEMS_v0.7.3.xsd")
+        xml_schema = etree.XMLSchema(etree.parse(schema_file))
+        print("Validating", filename,"against",schema_file.geturl())
+        xml_schema.assert_(etree.parse(xml_file_path))
+        return ""
 
-def checkValidation(model_name, model):
+    except Exception as e:
+        return "XSD" + str(e)
+
+def checkValidation(model_name, model, folder):
     has_coupling = False
     for i, cplists in enumerate(model.component_types):
         if 'coupling' in cplists.name:
@@ -68,7 +80,7 @@ def checkValidation(model_name, model):
     elif not has_noise:
         return "There is not noise in ComponentTypes"
     else:
-        return ""
+        return validate_LEMS_structure(model_name, folder)
 
 def render_model(model_name, template=None, folder=None):
     model_str = ''
@@ -77,7 +89,7 @@ def render_model(model_name, template=None, folder=None):
         template = template or default_template()
 
         modellist = model.component_types[model_name]
-        validation = checkValidation(model_name, model)
+        validation = checkValidation(model_name, model, folder)
         print("voy a validar")
         if len(validation) == 0:
 
@@ -96,7 +108,6 @@ def render_model(model_name, template=None, folder=None):
             for ct in (model.component_types):
                 if ct.name == 'noise' and ct.description == 'on':
                     noisepresent=True
-            print("voy a templear 1")
             # start templating
             model_str = template.render(
                                     modelname=model_name,
@@ -108,13 +119,13 @@ def render_model(model_name, template=None, folder=None):
                                     noisepresent=noisepresent,
                                     expolist=expolist
                                     )
-            print("voy a templear 2")
             return True, model_str
         else:
             model_str = validation
+
     except Exception as e:
-        print("render_model **********, ", e)
         logger.error('Error %s', e)
+        model_str = e
 
     return False, 'LEM validation. ' + model_str
 
