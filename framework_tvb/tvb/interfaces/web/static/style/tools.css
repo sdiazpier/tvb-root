@@ -91,3 +91,16 @@ ul.myUL {
 .active {
   display: block;
 }
+
+/* Panels % textarea */
+.row_panel {
+    height: 300px;
+}
+
+.area {
+    width: 100%;
+    height: 300px;
+    resize: none;
+    box-sizing: border-box;
+
+}

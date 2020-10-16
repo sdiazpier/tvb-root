@@ -136,7 +136,6 @@ function onDrop(event) {
     // TODO: Add principal component to the controller
     arrayListIds.push(clone.id);
     arrayTreeIds.push(treenode_id);
-
 }
 
 function clearTrash(){
@@ -178,7 +177,7 @@ function updateIndexes(concept, oper){
 }
 
 // TODO: FUNCTIONS TO MOVE IN A OPERATIONS FILE
-function removeLastDropped(){
+function removeLastDropped(removexml){
     if(arrayListIds !== undefined && arrayListIds.length > 0){
         component_count -=1;
         document.getElementById(arrayTreeIds.pop()).remove();
@@ -187,23 +186,30 @@ function removeLastDropped(){
         last_ComponentType_id = 0;
         last_Dynamic_id = 0;
     }
+
+    if( removexml == true){
+        getXML();
+    }
 }
 
 function removeAlltDropped(){
     while(arrayListIds !== undefined && arrayListIds.length > 0){
-        removeLastDropped();
+        removeLastDropped(false);
     }
+    getXML();
 }
 
+function prepareHeader(){
+    var header = {};
+    header['name']= document.getElementById('model_name').value;
+    header['description']= document.getElementById('model_description').value;
+    header['language']= document.getElementById('model_language').selectedOptions[0].value;
+    return JSON.parse(JSON.stringify(header));
+}
 function overlaySubmit(formToSubmitId, backPage) {
-    var submitableData = {};
-
-    submitableData['name']= document.getElementById('model_name').value;
-    submitableData['description']= document.getElementById('model_description').value;
-    submitableData['language']= document.getElementById('model_language').selectedOptions[0].value;
-    var valor = submitableData['name'];
-
-    if (valor.length > 0 ){
+    var submitableData = prepareHeader();
+    //var valor = submitableData['name'];
+    if (submitableData['name'].length > 0 ){
         doAjaxCall({
             async: false,
             type: 'POST',
@@ -260,6 +266,9 @@ function closeAndRefreshTreeView(id, parent, response) {
         document.getElementById(id).innerText = response;
     }
     closeOverlay();
+
+    //Get XML content from the server
+    getXML();
 }
 
 // Operations with DrowDownList
@@ -289,7 +298,7 @@ function changeFunc(){
         }
     }
 
-    var components = callData("getComponents",selectedOption);
+    var components = getComponents("getComponents",selectedOption);
     //alert(components);
     container.textContent = '';
     for(var key in components){
@@ -313,10 +322,7 @@ function changeFunc(){
 
     //Do something
     container.setAttribute("option", selectedOption);
-    forceRedrawComponent(container)
-
-    //document.getElementById("test").innerHTML = "You selected: " + selectedOption;
-
+    forceRedrawComponent(container);
 }
 
 function forceRedrawComponent(component){
@@ -326,7 +332,7 @@ function forceRedrawComponent(component){
     component.style.display = display;
 
 }
-function callData(subUrl,argument){
+function getComponents(subUrl,argument){
     var dict = Object();
     doAjaxCall({
         async: false,
@@ -348,5 +354,33 @@ function callData(subUrl,argument){
             alert("Error!, No data available!");
         }
     });
-    return JSON.parse(JSON.stringify(dict));;
+    return JSON.parse(JSON.stringify(dict));
+}
+
+
+function getXML(){
+    var submitableData = prepareHeader();
+    if (submitableData['name'].length > 0 ){
+        doAjaxCall({
+            async: false,
+            type: 'POST',
+            dataType: "json",
+            url: "/tools/dsl/getxml",
+            data: submitableData,
+            success: function (response) {
+
+                if(response.length > 0){
+                    var area = document.getElementById("Textarea");
+                    area.innerHTML = response;
+                } else{
+                    alert("XML content was not nice!");
+                }
+            },
+            error: function () {
+                alert("Error! processing xml in the server");
+            }
+        });
+    } else{
+        alert("XML Header is not ready yet");
+    }
 }

@@ -10,6 +10,8 @@ from tvb.interfaces.web.controllers.decorators import expose_page, using_templat
 from tvb.interfaces.web.controllers.tools.tools_controller import ToolsController
 import xml.etree.cElementTree as Xml
 
+from lxml import etree
+
 class DSLController(ToolsController):
     def __init__(self):
         ToolsController.__init__(self)
@@ -24,7 +26,12 @@ class DSLController(ToolsController):
         #TODO Fix the real path
         #self.basepath = os.path.join(os.path.dirname(tvb.__file__),'dsl','NeuroML','XMLmodels')
         self.basepath = os.path.join(os.getenv("HOME"),'tvb_temporal_folder')
+        self.xml_namespaces = dict()
+        #self.xml_namespaces['xmlns'] = "file://" + os.path.join(self.basepath,"rML_v0.xsd")
+        self.xml_namespaces['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance"
+        #self.xml_namespaces['xsi:schemaLocation'] = "file://" + os.path.join(self.basepath,"rML_v0.xsd")
 
+        self.xsd_validator_file = "file://" + os.path.join(self.basepath,"rML_v0.xsd")
         self.xml_components = dict()
         self.xml_components["python"] = {"ComponentType": "",
                                          "Constant": "ComponentType",
@@ -51,27 +58,34 @@ class DSLController(ToolsController):
 
         # TODO: get dynamically from LEMS
         self.dictComponentType = dict()
-        self.dictComponentType["python"] = {"ComponentType": {'name': '', 'description': '', 'value': ''},
-                                "Constant": {'name': '', 'domain': '', 'default': '', 'description': ''},
-                                "Exposure": {'name': '', 'choices': '', 'default': '', 'description': ''},
+        self.dictComponentType["python"] = {"ComponentType": {'name': '', 'description': ''},
+                                    "Constant": {'name': '', 'domain': '', 'default': '', 'description': ''},
+                                    "Exposure": {'name': '', 'choices': '', 'default': '', 'description': ''},
                                 "Dynamics": {'name': ''},
-                                "StateVariable": {'name': '', 'default': '', 'boundaries': ''},
-                                "DerivedVariable": {'name': '', 'expression': ''},
-                                "ConditionalDerivedVariable": {'name': '', 'cases': '', 'condition': ''},
-                                "TimeDerivative": {'name': '', 'expression': ''}}
-
-        self.dictComponentType["cuda"] ={"ComponentType": {'name': '', 'description': '', 'value': ''},
-                                         "Constant": {'name': '', 'domain': '', 'default': '', 'description': ''},
-                                         "Exposure": {'name': '', 'choices': '', 'default': ''},
-                                         "Parameter": {'name': '', 'dimension': ''},
-                                         "DerivedParameter": {'name': '', 'expression': ''},
+                                    "StateVariable": {'name': '', 'default': '', 'boundaries': ''},
+                                    "DerivedVariable": {'name': '', 'expression': ''},
+                                    "ConditionalDerivedVariable": {'name': '', 'cases': '', 'condition': ''},
+                                    "TimeDerivative": {'name': '', 'expression': ''}
+                                }
+        # ComponentType , 'value': ''
+        self.dictComponentType["cuda"] ={"ComponentType": {'name': '', 'description': ''},
+                                            "Constant": {'name': '', 'domain': '', 'default': '', 'description': ''},
+                                            "Exposure": {'name': '', 'choices': '', 'default': ''},
+                                            "Parameter": {'name': '', 'dimension': ''},
+                                            "DerivedParameter": {'name': '', 'expression': '', 'value': ''},
                                          "Dynamics": {'name': ''},
-                                         "StateVariable": {'name': '', 'default': '', 'boundaries': ''},
-                                         "DerivedVariable": {'name': '', 'expression': ''}}
+                                            "StateVariable": {'name': '', 'default': '', 'boundaries': ''},
+                                            "DerivedVariable": {'name': '', 'expression': ''},
+                                            "ConditionalDerivedVariable": {'name': '', 'cases': '', 'condition': ''},
+                                            "TimeDerivative": {'name': '', 'expression': ''},
+                                         }
 
         #TODO: get the session id
         self.userID = 20
 
+        self.resetdictionaries();
+
+    def resetdictionaries(self):
         self.dictAll[self.userID] = {}
         self.dictEsencial[self.userID] = {}
         self.dictStructuredIDs[self.userID] = {}
@@ -87,6 +101,23 @@ class DSLController(ToolsController):
         except Exception as excep:
             self.logger.error("No data to provide! ", excep)
 
+    @cherrypy.expose
+    @handle_error(redirect=False)
+    @check_user
+    def getxml(self, **data):
+        try:
+            for key, value in data.items():
+                if(len(key) > 0):
+                    self.dictModelInfo[self.userID][key] = value
+
+            stored, filename = self.generateXML(self.dictModelInfo[self.userID]['language'])
+            loaded, content = self.getXMLContent(filename)
+            if stored and loaded:
+                return content
+            else:
+                return ""
+        except Exception as excep:
+            self.logger.error("Could not convert data! ", excep)
 
     @cherrypy.expose
     @handle_error(redirect=False)
@@ -97,7 +128,7 @@ class DSLController(ToolsController):
                 if(len(key) > 0):
                     self.dictModelInfo[self.userID][key] = value
 
-            validation, msg = self.generateXML()
+            validation, msg = self.convertXML(self.dictModelInfo[self.userID]['language'])
             if validation:
                 return "Converted file!"
             else:
@@ -171,11 +202,14 @@ class DSLController(ToolsController):
     @expose_page
     @settings
     def index(self, create=False, page=1, selected_project_id=None, **_):
+        self.dictModelInfo[self.userID] = {}
+
         if cherrypy.request.method == 'POST' and create:
             raise cherrypy.HTTPRedirect('/tools/dsl/dsl_create')
 
         template_specification = dict(mainContent="tools/dsl_viewall", title="RateML Framework", selectedOptions="")#,
         #                              mylista=self.xml_components, selectedOptions="cuda")
+        self.resetdictionaries();
         return self.fill_default_attributes(template_specification)
 
     @expose_page
@@ -197,6 +231,8 @@ class DSLController(ToolsController):
 
         template_specification = dict(mainContent="tools/dsl_create", title="RateML Framework", selectedOptions="")#,
         #                              mylista=self.xml_components, selectedOptions="cuda")
+
+        self.resetdictionaries();
         return self.fill_default_attributes(template_specification)
 
 
@@ -211,55 +247,84 @@ class DSLController(ToolsController):
         ToolsController.fill_default_attributes(self, template_dictionary)
         return template_dictionary
 
+    def getXMLContent(self,filename):
+        try:
+            content = etree.parse(filename)
+            return True, etree.tostring(content, pretty_print=True).decode('utf-8')
+
+        except Exception as excep:
+            self.logger.error(str(excep))
+            return False, str(excep)
+
     # Structured data
     # { Component:{ SubComponent_1:{}, Subcomponent_2:{}, Subcomponent_3:{Sub-subComponen1: {} } } }
-    def generateXML(self):
-
+    def generateXML(self, language):
         try:
-            lems = Xml.Element("Lems", attrib=self.dictModelInfo[self.userID])
-            for key_layer1,val_layer1 in self.dictStructuredIDs[self.userID].items():
+            lems = Xml.Element("Lems", attrib=self.xml_namespaces)#, attrib=self.dictModelInfo[self.userID]
+            for key_layer1, val_layer1 in self.dictStructuredIDs[self.userID].items():
 
                 # Principal component
-                comp = Xml.SubElement(lems, self.dictAll[self.userID][key_layer1]['type'], attrib=self.dictEsencial[self.userID][key_layer1])
+                comp = Xml.SubElement(lems, self.dictAll[self.userID][key_layer1]['type'],
+                                      attrib=self.dictEsencial[self.userID][key_layer1])
 
                 # Subcomponents
                 for key_layer2, val_layer2 in val_layer1.items():
+
                     sub = Xml.SubElement(comp, self.dictAll[self.userID][key_layer2]['type'],
-                                   attrib=self.dictEsencial[self.userID][key_layer2])
+                                         attrib=self.dictEsencial[self.userID][key_layer2])
+                    #if(key_layer2 == "Dynamics"):
+                    #    #Dynamics does not contain attributes, just subcomponents
+                    #    sub = Xml.SubElement(comp, self.dictAll[self.userID][key_layer2]['type'],
+                    #                         attrib=self.dictEsencial[self.userID][key_layer2])
+                    #else:
+                    #
+                    #    sub = Xml.SubElement(comp, self.dictAll[self.userID][key_layer2]['type'])
 
                     # Sub-Subcomponents
                     for key_layer3, val_layer3 in val_layer2.items():
                         Xml.SubElement(sub, self.dictAll[self.userID][key_layer3]['type'],
-                                             attrib=self.dictEsencial[self.userID][key_layer3])
+                                       attrib=self.dictEsencial[self.userID][key_layer3])
 
-            #Build the tree object
+            # Build the tree object
             tree = Xml.ElementTree(lems)
 
-            #Store the XML file
+            # Store the XML file
             filepath = ""
             if (self.dictModelInfo[self.userID]['language'].lower() == 'cuda'):
-                filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name']+'_CUDA.xml')
+                filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name'] + '_CUDA.xml')
             elif (self.dictModelInfo[self.userID]['language'].lower() == 'python'):
-                filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name']+'.xml')
+                filepath = os.path.join(self.basepath, self.dictModelInfo[self.userID]['name'] + '.xml')
             else:
-                raise("No Programing language implemented!")
+                raise ("No Programing language implemented!")
 
             tree.write(filepath)
 
-            if not os.path.exists(filepath):
-                raise("No XML file generated")
+            exist, content = self.getXMLContent(filepath)
+            if exist:
+                with open(filepath, "w") as writter:
+                    writter.write(content)
+
+            return True, filepath
+        except Exception as excep:
+            self.logger.error(str(excep))
+            return False, str(excep)
+
+    def convertXML(self, language):
+        try:
+            file_stored, file_msg = self.generateXML(language)
+            if not file_stored:
+                raise("No XML file generated!")
 
             msg = ""
             if self.dictModelInfo[self.userID]['language'].lower() == 'cuda':
-                # Todo Calling the Framework DSL_CUDA
-                #self.logger.info("Functionality Not implemented!")
+                # Calling the RateML CUDA Framework
                 self.logger.info("Generating model in CUDA ... %s", self.dictModelInfo[self.userID]['name'])
                 msg = cuda_templating(self.dictModelInfo[self.userID]['name'], self.basepath)
 
             elif self.dictModelInfo[self.userID]['language'].lower() == 'python':
                 # Calling the RateML Framework
                 self.logger.info("Generating model in Python ... %s", self.dictModelInfo[self.userID]['name'])
-                msg = regTVB_templating(self.dictModelInfo[self.userID]['name'], self.basepath)
+                msg = regTVB_templating(self.dictModelInfo[self.userID]['name'], validator=self.xsd_validator_file, folder=self.basepath)
 
             if len(msg) == 0:
                 return True, ""

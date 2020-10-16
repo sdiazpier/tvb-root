@@ -90,19 +90,21 @@ def default_template():
     logger.info('Using default template tmpl8_regTVB.py, %s', here)
     return template
 
-def validate_LEMS_structure(filename, folder):
+def validate_LEMS_structure(filename, validator_url, folder):
     try:
         xml_file_path = lems_file(filename, folder)
-        schema_file = urlopen("https://raw.githubusercontent.com/LEMS/LEMS/development/Schemas/LEMS/LEMS_v0.7.3.xsd")
+        #schema_file = urlopen("https://raw.githubusercontent.com/LEMS/LEMS/development/Schemas/LEMS/LEMS_v0.7.3.xsd")
+        schema_file = urlopen(validator_url)
         xml_schema = etree.XMLSchema(etree.parse(schema_file))
         print("Validating", filename,"against",schema_file.geturl())
         xml_schema.assert_(etree.parse(xml_file_path))
         return ""
 
     except Exception as e:
-        return "XSD" + str(e)
+        print("XSD Validator" + str(e))
+        return "XSD Validator" + str(e)
 
-def checkValidation(model_name, model, folder):
+def checkValidation(model_name, model, validator, folder):
     if model_name not in model.component_types:
         return "Model name is not in the component"
     elif len(list(model.component_types[model_name].constants)) == 0:
@@ -111,18 +113,20 @@ def checkValidation(model_name, model, folder):
         return "Model does not containt Dynamics"
     elif len(list(model.component_types[model_name].exposures)) == 0:
         return "There is not Exposures"
+    #elif(validator != None):
+    #    return validate_LEMS_structure(model_name, validator, folder)
     else:
-        return validate_LEMS_structure(model_name, folder)
+        return ""
 
 
-def render_model(model_name, template=None, folder=None):
+def render_model(model_name, validator=None, template=None, folder=None):
 
     model_str = ''
     try:
         model, svboundaries = load_model(model_name, folder)
         template = template or default_template()
 
-        validation = checkValidation(model_name, model, folder)
+        validation = checkValidation(model_name, model, validator, folder)
         if len(validation) == 0:
             model_str = template.render(
                 dfunname=model_name,
@@ -139,10 +143,10 @@ def render_model(model_name, template=None, folder=None):
         logger.error('Error %s', e)
         model_str = e
 
-    return False, 'LEM validation. ' + model_str
+    return False, 'LEMS validation. ' + model_str
 
 
-def regTVB_templating(model_filename, folder=None):
+def regTVB_templating(model_filename, validator=None, folder=None):
     """
     modelfile.py is placed results into tvb/simulator/models
     for new models models/__init.py__ is auto_updated if model is unfamiliar to tvb
@@ -160,7 +164,7 @@ def regTVB_templating(model_filename, folder=None):
         modelfile = os.path.join(os.path.dirname(tvb.simulator.models.__file__), model_filename.lower() + '.py')
         logger.info(" - Output folder -> %s", os.path.join(os.path.dirname(tvb.simulator.models.__file__)))
         # start templating
-        validation, model_str = render_model(model_filename, template=default_template(), folder=folder)
+        validation, model_str = render_model(model_filename, validator=validator, template=default_template(), folder=folder)
 
         if not validation:
             return model_str

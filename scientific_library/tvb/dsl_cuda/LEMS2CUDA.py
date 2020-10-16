@@ -79,8 +79,10 @@ def checkValidation(model_name, model, folder):
         return "There is coupling in ComponentTypes"
     elif not has_noise:
         return "There is not noise in ComponentTypes"
+    # elif(validator != None):
+    #    return validate_LEMS_structure(model_name, validator, folder)
     else:
-        return validate_LEMS_structure(model_name, folder)
+        return ""
 
 def render_model(model_name, template=None, folder=None):
     model_str = ''
@@ -127,7 +129,7 @@ def render_model(model_name, template=None, folder=None):
         logger.error('Error %s', e)
         model_str = e
 
-    return False, 'LEM validation. ' + model_str
+    return False, 'LEMS validation. ' + model_str
 
 def cuda_templating(model_filename, folder=None):
 

@@ -1,15 +1,14 @@
 
-<link rel="stylesheet" type="text/css" href="/static/style/tools.css?{{ currentVersionJS }}"/>
-<script type="text/javascript" src="/static/js/tools/dsl_framework.js?{{ currentVersionJS }}"></script>
-<h4><mark>Visualize</mark> <span id="title-visualizers">Model structure</span></h4>
+
+<h4><mark>History</mark> <span id="title-visualizers">Actions</span></h4>
 <div class="parent-dropzone">
     Drop here:
-    <div class="destiny-dropzone" ondragover="onDragOver(event);" ondrop="onDrop(event);">
+    <div class="destiny-dropzone" ondragover="onDragOver(event);" ondrop="onDrop(event);" align="center">
     </div>
     <p class="bottom-three"></p>
 
     <div class="row" align="center">
-       <input type="button" class="app-button" id="btnSearch" value="Undo" onclick="removeLastDropped()">
+       <input type="button" class="app-button" id="btnSearch" value="Undo" onclick="removeLastDropped(true)">
        <input type="button" class="app-button" id="btnClearSearch" value="Clear all" onclick="removeAlltDropped()">
 
      </div>
