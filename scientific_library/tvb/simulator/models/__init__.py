@@ -51,6 +51,11 @@ from enum import Enum
 
 
 class ModelsEnum(Enum):
+    AARONT = "AaronT"
+    AARON1T = "Aaron1T"
+    RWONGWANGT = "rwongwangT"
+    MONTBRIOT = "montbrioT"
+    KURAMOTOT = "kuramotoT"
     BASE_MODEL = "Model"
     EPILEPTOR = "Epileptor"
     EPILEPTOR_2D = "Epileptor2D"
@@ -92,6 +97,11 @@ def _get_imported_model(model):
 
 
 _module_models = {
+    'aaronT': [ModelsEnum.AARONT],
+    'aaron1T': [ModelsEnum.AARON1T],
+    'rwongwangT': [ModelsEnum.RWONGWANGT],
+    'montbrioT': [ModelsEnum.MONTBRIOT],
+    'kuramotoT': [ModelsEnum.KURAMOTOT],
     'base': [ModelsEnum.BASE_MODEL],
     'epileptor': [ModelsEnum.EPILEPTOR, ModelsEnum.EPILEPTOR_2D],
     'epileptor_rs': [ModelsEnum.EPILEPTOR_RS],

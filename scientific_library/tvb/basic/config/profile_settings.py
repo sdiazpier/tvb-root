@@ -103,7 +103,7 @@ class BaseSettingsProfile(object):
         Return path towards tvb_bin location. It will be used in some environment for determining the starting point
         """
         try:
-            import tvb_bin
+            import tvb_bin.tvb_bin as tvb_bin
             return os.path.dirname(os.path.abspath(tvb_bin.__file__))
         except ImportError:
             return "."
