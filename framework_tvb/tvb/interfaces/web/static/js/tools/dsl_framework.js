@@ -3,6 +3,7 @@ var last_ComponentType_id = 0;
 var last_Dynamic_id = 0;
 
 var selectedOptions = ""
+var working_folder = "";
 
 var arrayTreeIds = [];
 var arrayListIds = [];
@@ -204,6 +205,8 @@ function prepareHeader(){
     header['name']= document.getElementById('model_name').value;
     header['description']= document.getElementById('model_description').value;
     header['language']= document.getElementById('model_language').selectedOptions[0].value;
+    header['folder']= document.getElementById('working_folder').value;
+    working_folder = header['folder'];
     return JSON.parse(JSON.stringify(header));
 }
 function overlaySubmit(formToSubmitId, backPage) {
@@ -216,7 +219,21 @@ function overlaySubmit(formToSubmitId, backPage) {
             url: "/tools/dsl/convertdata",
             data: submitableData,
             success: function (response) {
-                alert(response);
+                //alert(response);
+                var result = confirm(response + "\nDo you want to see the generated model?.");
+                if(result == true){
+
+                    var content = "";
+                    var reader = new FileReader();
+                    const file = working_folder+'/'+submitableData['name'];
+
+                    reader.addEventListener('load',function(event){
+                      content = event.target.result;
+                    });
+                    reader.readAsText(file,"UTF-8");
+                    alert(content);
+                }
+
             },
             error: function () {
                 displayMessage("Error!", "errorMessage");
@@ -228,6 +245,55 @@ function overlaySubmit(formToSubmitId, backPage) {
 
 }
 
+function getmodels(){
+    var header = {};
+    header['model_location_option']= document.getElementById('model_location_option').selectedOptions[0].value;
+    header['folder']= document.getElementById('working_folder').value;
+    working_folder = header['folder'];
+    var submitableData = JSON.parse(JSON.stringify(header));
+    if(submitableData['model_location_option'].length > 0 ){
+        doAjaxCall({
+            async: false,
+            type: 'POST',
+            url: "/tools/dsl/getmodels",
+            data: submitableData,
+            success: function (response) {
+
+                var items = JSON.parse(response); //JSON.parse(JSON.stringify(response));
+
+                document.getElementById('working_folder').value = items["folder"];
+
+                //cleanning old elements
+                var list = document.getElementById("listing");
+                while(list.firstChild){
+                    list.removeChild(list.firstChild);
+                }
+
+                //Create new ones into the list
+                for (var i = 0; i < items["files"].length; i++) {
+                    var item = document.createElement('li');
+
+                    // Set its contents:
+                    item.innerHTML = items["files"][i]//item;
+                    //item.className = ""
+                    //item.addEventListener("click", convertmodel(item.innerHTML););
+
+                    // Add it to the list:
+                    list.appendChild(item);
+                }
+            },
+            error: function () {
+                displayMessage("Error!", "errorMessage");
+            }
+        });
+
+    } else{
+        alert("Please select a predefined location");
+    }
+}
+function convertmodel(a){
+    alert(a+ " was clicked");
+}
 /**
  * Used from DataType(Group) overlay to store changes in meta-data.
  */
@@ -357,7 +423,6 @@ function getComponents(subUrl,argument){
     return JSON.parse(JSON.stringify(dict));
 }
 
-
 function getXML(){
     var submitableData = prepareHeader();
     if (submitableData['name'].length > 0 ){
@@ -382,5 +447,36 @@ function getXML(){
         });
     } else{
         alert("XML Header is not ready yet");
+    }
+}
+
+/**
+* Operations with files
+*/
+function changeLocation(){
+    var selectedOption = document.getElementById('model_location').selectedOptions[0].value;
+
+}
+function select_folder(event){
+
+    var files = event.target.files;
+    var path = files[0].webkitRelativePath;
+    var folder =  path.split("/");
+    document.getElementById("working_folder").value = path;
+
+    var list = document.getElementById("listing");
+
+    while(list.firstChild){
+        list.removeChild(list.firstChild);
+    }
+
+    for (var i = 0; i < files.length; i++) {
+        var item = document.createElement('li');
+
+        // Set its contents:
+        item.appendChild(document.createTextNode("HOla"));//files[i]
+
+        // Add it to the list:
+        list.appendChild(item);
     }
 }

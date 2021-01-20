@@ -1,8 +1,7 @@
-import cherrypy, os, json
+import cherrypy, os, json, glob
 
 from tvb.rateML.XML2model import RateML
-#from tvb.dsl.LEMS2python import regTVB_templating
-#from tvb.dsl_cuda.LEMS2CUDA import cuda_templating
+from tvb.basic.profile import TvbProfile
 from tvb.basic.logger.builder import get_logger
 from tvb.core.services.exceptions import ServicesBaseException
 from tvb.core.services.operation_service import OperationService
@@ -27,7 +26,11 @@ class DSLController(ToolsController):
 
         #TODO Fix the real path
         #self.basepath = os.path.join(os.path.dirname(tvb.__file__),'dsl','NeuroML','XMLmodels')
-        self.basepath = os.path.join(os.getenv("HOME"),'tvb_temporal_folder')
+        #self.basepath = os.path.join(os.getenv("HOME"),'tvb_temporal_folder')
+        self.basepath = TvbProfile.current.TVB_TEMP_FOLDER #"/home/aaron/TVB/TEMP"
+        self.xml_model_location = dict()
+        self.xml_model_location["user"] = self.basepath
+        self.xml_model_location["tvb"] = TvbProfile.current.TVB_STORAGE
         self.xml_namespaces = dict()
         #self.xml_namespaces['xmlns'] = "file://" + os.path.join(self.basepath,"rML_v0.xsd")
         self.xml_namespaces['xmlns:xsi'] = "http://www.w3.org/2001/XMLSchema-instance"
@@ -144,6 +147,29 @@ class DSLController(ToolsController):
         except Exception as excep:
             self.logger.error("Could not convert data! ", excep)
 
+    @cherrypy.expose
+    @handle_error(redirect=False)
+    @check_user
+    def getmodels(self, **data):
+        try:
+            for key, value in data.items():
+                if (len(key) > 0):
+                    self.dictModelInfo[self.userID][key] = value
+            files = []
+            if(len(data["model_location_option"])>0):
+
+                folder = self.xml_model_location[data["model_location_option"]]
+                for filename in glob.glob(os.path.join(folder,"*")):
+                    if(os.path.isfile(filename)):
+                        path, extension =os.path.splitext(filename)
+                        if extension.lower() == ".xml":
+                            files.append(filename.split(os.path.sep)[-1])
+
+                return json.dumps({"folder":folder, "files":files})
+            else:
+                return json.dumps({"folder":"", "files":""})
+        except Exception as excep:
+            self.logger.error("Could not convert data! ", excep)
     @cherrypy.expose
     @handle_error(redirect=False)
     @check_user

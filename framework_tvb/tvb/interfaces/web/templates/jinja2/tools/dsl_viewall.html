@@ -1,8 +1,60 @@
-<link rel="stylesheet" type="text/css" href="/static/style/tools.css?{{ currentVersionJS }}"/>
+<link rel="stylesheet" type="text/css" href="/static/style/base.css"/>
+<link rel="stylesheet" type="text/css" href="/static/style/tools.css"/>
+<script type="text/javascript" src="/static/js/tools/dsl_framework.js"></script>
 
-<form id="main" class="model-list view-column col-1" method="post">
-    <h3>View under construction</h3>
-    <p>Please, select an action in the right panel</p>
+<form id="main" class="columnized colscheme-2-1st-narrow" method="post">
+
+    <section class="view-column col-1" style="width:30%;padding:5px;">
+        <h4><mark>Folder</mark> Load XML Model</h4>
+        <fieldset id="select-folder">
+            <dl>
+                <dt>
+                    <label for="model_location">Model Location</label>
+                </dt>
+                <dd>
+                <select id="model_location_option" onchange="getmodels();">
+                    <option value="None" selected>Choose Location</option>
+                    <option value="tvb" >TVB model</option>
+                    <option value="user">User Storage</option>
+                </select>
+                <dt>
+                    <label for="working_folder">Location path</label>
+                </dt>
+
+                <dd>
+                    <p  class="field-data"><input tabindex='1' type="text" id="working_folder" value="" disabled/></p>
+                </dd>
+                <dt class="field-mandatory">
+                    <label>Output language</label>
+                </dt>
+
+                <dd>
+                    <select id="model_language" onchange="changeFunc();">
+                        <option value="None" selected>Choose language</option>
+                        <option value="Cuda" >Cuda</option>
+                        <option value="Python">Python</option>
+                    </select>
+                </dd>
+
+
+            </dl>
+        </fieldset>
+        <h4><mark>Files</mark> Select Model</h4>
+        <fieldset id="select-file">
+            <ul id="listing" style="background-color:white;height:250px;"> </ul>
+
+        </fieldset>
+    </section>
+    <section class="view-column col-2" style="width: 65%;padding:5px;">
+        <h4><mark>Visualize</mark> Converted model</h4>
+         <fieldset id="visualize-data">
+            <div id="main-xml" class="specialviewer">
+                <textarea id="model-content" class="area" placeholder="The mode content will appear here" disabled></textarea>
+            </div>
+        </fieldset>
+
+    </section>
+
 
     <aside class="header-component toolbar can-extend auto-extends">
         <div class="extension">
