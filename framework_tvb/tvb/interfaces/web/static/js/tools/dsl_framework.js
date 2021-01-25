@@ -275,8 +275,8 @@ function getmodels(){
 
                     // Set its contents:
                     item.innerHTML = items["files"][i]//item;
-                    //item.className = ""
-                    //item.addEventListener("click", convertmodel(item.innerHTML););
+                    item.className = ""
+                    item.addEventListener("click", convertmodel, event);
 
                     // Add it to the list:
                     list.appendChild(item);
@@ -291,9 +291,45 @@ function getmodels(){
         alert("Please select a predefined location");
     }
 }
-function convertmodel(a){
-    alert(a+ " was clicked");
+
+function convertmodel(event){
+    if(confirm("Do you want to convert the model?")){
+        selected_language = document.getElementById('model_language').selectedOptions[0].value;
+        selected_location = document.getElementById('model_location_option').selectedOptions[0].value;
+
+        if (selected_language == "None"){
+            alert("Please select first the language");
+        } else{
+
+            var header = {};
+            header['model_language'] = selected_language;
+            header['model_location_option'] = selected_location;
+            header['model_name'] = event.currentTarget.innerHTML;
+            var submitableData = JSON.parse(JSON.stringify(header));
+            if(submitableData['model_location_option'].length > 0 ){
+                doAjaxCall({
+                    async: false,
+                    type: 'POST',
+                    url: "/tools/dsl/convertmodel_findall",
+                    data: submitableData,
+                    success: function (response) {
+                        if(response.length > 0){
+                            var area = document.getElementById("model-content");
+                            area.innerHTML = response;
+                        } else{
+                            alert("Generated content was not nice!");
+                        }
+                    },
+                    error: function () {
+                        displayMessage("Error!", "errorMessage");
+                    }
+                });
+            }
+        //event.currentTarget.innerHTML
+        }
+    }
 }
+
 /**
  * Used from DataType(Group) overlay to store changes in meta-data.
  */

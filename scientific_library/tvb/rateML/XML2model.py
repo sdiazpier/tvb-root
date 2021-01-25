@@ -88,9 +88,10 @@ class RateML:
             # write model to user submitted location
             self.write_model_file(self.generated_model_location, model_str)
 
-            # if it is a TVB.py model, it should be familiarized
-            if self.language.lower()=='python':
-                self.familiarize_TVB(model_str)
+            # if it is a TVB.py model, it should be familiarized.
+            # TODO it make the whole Server reset the session.
+            #if self.language.lower()=='python':
+            #    self.familiarize_TVB(model_str)
             return True, ""
         except Exception as e:
             return False, str(e)
@@ -103,7 +104,7 @@ class RateML:
 
     def set_XML_model_folder(self):
         folder = self.XMLfolder or self.default_XML_folder()
-        return os.path.join(folder, self.model_filename.lower() + '.xml')
+        return os.path.join(folder, self.model_filename + '.xml') #.lower()
 
     @staticmethod
     def default_generation_folder():

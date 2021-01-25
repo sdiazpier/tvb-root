@@ -179,7 +179,7 @@ class DSLController(ToolsController):
                 if(len(key) > 0):
                     self.dictModelInfo[self.userID][key] = value
 
-            validation, msg = self.convertXML(self.dictModelInfo[self.userID]['language'])
+            validation, msg = self.createXML(self.dictModelInfo[self.userID]['language'])
             if validation:
                 return "Converted file!"
             else:
@@ -188,6 +188,32 @@ class DSLController(ToolsController):
         except Exception as excep:
             self.logger.error("Could not convert data! ", excep)
 
+    @cherrypy.expose
+    @handle_error(redirect=False)
+    @check_user
+    def convertmodel_findall(self, **data):
+        try:
+            dict = {}
+            for key, value in data.items():
+                if(len(key) > 0):
+                    dict[key] = value
+            filename, extension = os.path.splitext(dict["model_name"])
+
+            rateml = RateML(model_filename=filename,
+                            language=dict["model_language"].lower(),
+                            XMLfolder=self.xml_model_location[dict["model_location_option"]],
+                            GENfolder=self.xml_model_location[dict["model_location_option"]])
+            finished, validation = rateml.transform()
+            if finished:
+                content = ""
+                with open(rateml.generated_model_location, 'r') as content_file:
+                    content = content_file.read()
+                return content
+            else:
+                raise validation
+
+        except Exception as excep:
+            return "Could not convert data! "
 
     @cherrypy.expose
     @handle_error(redirect=False)
@@ -368,7 +394,25 @@ class DSLController(ToolsController):
             self.logger.error(str(excep))
             return False, str(excep)
 
-    def convertXML(self, language):
+    def convertXML(self, language, xmlmodel, outputfolder):
+        finished = False
+        try:
+            xmlfolder, filename = path.split(xmlmodel)
+            rateml = RateML(model_filename=filename,
+                            language=language,
+                            XMLfolder=xmlfolder,  # XMLfolder="./XMLmodels/",
+                            GENfolder=outputfolder)
+            finished, validation = rateml.transform()
+            if finished:
+                return True, "Generated model in " + language
+            else:
+                return finished, validation
+
+        except Exception as excep:
+            self.logger.error(str(excep))
+
+
+    def createXML(self, language):
         finished=False
         validation=""
         try:
