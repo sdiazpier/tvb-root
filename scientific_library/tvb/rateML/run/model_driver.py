@@ -108,8 +108,8 @@ class Driver_Setup:
 		parser.add_argument('-s1', '--n_sweep_arg1', default=4, help='num grid points for 2st parameter', type=int)
 		parser.add_argument('-n', '--n_time', default=400, help='number of time steps to do', type=int)
 		parser.add_argument('-v', '--verbose', default=False, help='increase logging verbosity', action='store_true')
-		parser.add_argument('-m', '--model', default='epileptor', help="neural mass model to be used during the simulation")
-		parser.add_argument('-s', '--states', default=6, type=int, help="number of states for model")
+		parser.add_argument('-m', '--model', default='rwongwangcbs', help="neural mass model to be used during the simulation")
+		parser.add_argument('-s', '--states', default=2, type=int, help="number of states for model")
 		parser.add_argument('-x', '--exposures', default=2, type=int, help="number of exposures for model")
 		parser.add_argument('-l', '--lineinfo', default=False, help='generate line-number information for device code.', action='store_true')
 		parser.add_argument('-bx', '--blockszx', default=8, type=int, help="gpu block size x")
@@ -120,7 +120,7 @@ class Driver_Setup:
 		parser.add_argument('-w', '--write_data', default=False, help="write output data to file: 'tavg_data", action='store_true')
 		parser.add_argument('-g', '--gpu_info', default=False, help="show gpu info", action='store_true')
 		parser.add_argument('-dt', '--delta_time', default=0.1, type=float, help="dt for simulation")
-		parser.add_argument('-sm', '--speeds_min', default=3e-1, type=float, help="min speed for temporal buffer")
+		parser.add_argument('-sm', '--speeds_min', default=3e-3	, type=float, help="min speed for temporal buffer")
 
 		args = parser.parse_args()
 		return args

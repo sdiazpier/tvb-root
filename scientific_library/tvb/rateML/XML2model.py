@@ -161,8 +161,9 @@ class RateML:
         # schema_file = urlopen("file:///home/michiel/Documents/Repos/tvb-root/github/tvb-root/scientific_library/tvb/rateML/rML_v0.xsd")
 
         # Global XSD file location
-        schema_file = urlopen(
-            "https://raw.githubusercontent.com/DeLaVlag/tvb-root/xsdvalidation/scientific_library/tvb/rateML/rML_v0.xsd")
+        schema_file = urlopen("file:///p/project/cslns/slns009/rateml/tvb-root/scientific_library/tvb/rateML/rML_v0.xsd")
+         #urlopen(
+           # "https://raw.githubusercontent.com/DeLaVlag/tvb-root/xsdvalidation/scientific_library/tvb/rateML/rML_v0.xsd")
         xmlschema = etree.XMLSchema(etree.parse(schema_file))
         xmlschema.assertValid(etree.parse(self.xml_location))
         logger.info("True validation of {0} against {1}".format(self.xml_location, schema_file.geturl()))
@@ -399,10 +400,10 @@ if __name__ == "__main__":
     language='Cuda'
 
     # choose an example or your own model
-    model_filename = 'montbrio'
+    # model_filename = 'montbrio'
     # model_filename = 'oscillator'
     # model_filename = 'kuramoto'
-    # model_filename = 'rwongwang'
+    model_filename = 'rwongwangcbs'
     # model_filename = 'epileptor'
 
     # start conversion to default model location

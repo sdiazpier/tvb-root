@@ -55,7 +55,7 @@ __global__ void ${modelname}(
     ## printing the to be sweeped parameters
     % for paramcounter, par_var in enumerate(params):
     const float ${par_var.name} = params(${paramcounter});
-    % endfor
+    % endfor /
 
     // regular constants
 % for item in const:

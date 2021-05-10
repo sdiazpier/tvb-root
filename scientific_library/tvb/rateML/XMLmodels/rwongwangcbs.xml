@@ -2,25 +2,32 @@
                     Base type of any cell/population which has a (dimensionless) rate _R.
                     Reduced Wong Wang model.">
 
-    <!-- This is not mandatory but these variables should be declared outside of the model integrate function itself -->
-    <Constant name="w_plus" dimension="" value="1.4" description="Excitatory population recurrence weight"/>
-    <Constant name="a_E" dimension="" value="310.0" description="[n/C]. Excitatory population input gain parameter, chosen to fit numerical solutions."/>
-    <Constant name="b_E" dimension="" value="125.0" description="[Hz]. Excitatory population input shift parameter chosen to fit numerical solutions."/>
-    <Constant name="d_E" dimension="" value="0.154" description="[s]. Excitatory population input scaling parameter chosen to fit numerical solutions."/>
-    <Constant name="a_I" dimension="" value="615.0" description="[n/C]. Inhibitory population input gain parameter, chosen to fit numerical solutions."/>
-    <Constant name="b_I" dimension="" value="177.0" description="[Hz]. Inhibitory population input shift parameter chosen to fit numerical solutions."/>
-    <Constant name="d_I" dimension="" value="0.087" description="[s]. Inhibitory population input scaling parameter chosen to fit numerical solutions."/>
-    <Constant name="gamma_E" dimension="" value="0.641 / 1000.0" description="Excitatory population kinetic parameter"/>
-    <Constant name="tau_E" dimension="" value="100.0" description="[ms]. Excitatory population NMDA decay time constant."/>
-    <Constant name="tau_I" dimension="" value="10.0" description="[ms]. Inhibitory population NMDA decay time constant."/>
-    <Constant name="I_0" dimension="" value="0.382" description="[nA]. Effective external input"/>
-    <Constant name="w_E" dimension="" value="1.0" description="Excitatory population external input scaling weight"/>
-    <Constant name="w_I" dimension="" value="0.7" description="Inhibitory population external input scaling weight"/>
-    <Constant name="gamma_I" dimension="" value="1.0 / 1000.0" description="Inhibitory population kinetic parameter"/>
-
-
-
     <ComponentType name="derivatives">
+        <!-- This is not mandatory but these variables should be declared outside of the model integrate function itself ** placeholder **  -->
+        <Constant name="w_plus" dimension="" value="1.4" description="Excitatory population recurrence weight"/>
+        <Constant name="a_E" dimension="" value="310.0" description="[n/C]. Excitatory population input gain parameter, chosen to fit numerical solutions."/>
+        <Constant name="b_E" dimension="" value="125.0" description="[Hz]. Excitatory population input shift parameter chosen to fit numerical solutions."/>
+        <Constant name="d_E" dimension="" value="0.154" description="[s]. Excitatory population input scaling parameter chosen to fit numerical solutions."/>
+        <Constant name="a_I" dimension="" value="615.0" description="[n/C]. Inhibitory population input gain parameter, chosen to fit numerical solutions."/>
+        <Constant name="b_I" dimension="" value="177.0" description="[Hz]. Inhibitory population input shift parameter chosen to fit numerical solutions."/>
+        <Constant name="d_I" dimension="" value="0.087" description="[s]. Inhibitory population input scaling parameter chosen to fit numerical solutions."/>
+        <Constant name="gamma_E" dimension="" value="0.641 / 1000.0" description="Excitatory population kinetic parameter"/>
+        <Constant name="tau_E" dimension="" value="100.0" description="[ms]. Excitatory population NMDA decay time constant."/>
+        <Constant name="tau_I" dimension="" value="10.0" description="[ms]. Inhibitory population NMDA decay time constant."/>
+        <Constant name="I_0" dimension="" value="0.382" description="[nA]. Effective external input"/>
+        <Constant name="w_E" dimension="" value="1.0" description="Excitatory population external input scaling weight"/>
+        <Constant name="w_I" dimension="" value="0.7" description="Inhibitory population external input scaling weight"/>
+        <Constant name="gamma_I" dimension="" value="1.0 / 1000.0" description="Inhibitory population kinetic parameter"/>
+
+        <Constant name="J_N" dimension="" value="0.15" description="[nA] NMDA current"/>
+        <Constant name="J_I" dimension="" value="1.0" description="[nA] Local inhibitory current"/>
+        <Constant name="G" dimension="" value="global_coupling" description="Global coupling scaling"/>
+        <Constant name="lamda" dimension="" value="0.0" description="Inhibitory global coupling scaling"/>
+
+        <!-- Unpack params -->
+        <Constant name="J_NMDA" dimension="" value="0.15" description=""/>
+        <!--Constant name="J_I" dimension="" value="inner_connectivity" description=""/-->
+        <Constant name="J_NMDA" dimension="" value="0.15" description=""/>
 
         <!-- Parameters will be assumed to be swept. sweep data will be matched by order of entry -->
         <Parameter name="inner_connectivity" dimension='0.0, 2.0'/>
@@ -31,28 +38,16 @@
         <DerivedParameter name="rec_speed_dt" value="0"/>
         <DerivedParameter name="nsig" value="sqrt(dt) * sqrt(2.0 * 1e-5)"/>
 
-        <!-- This is not mandatory but these variables should be declared outside of the model integrate function itself ** placeholder **  -->
-
-        <Constant name="J_N" dimension="" value="0.15" description="[nA] NMDA current"/>
-        <Constant name="J_I" dimension="" value="1.0" description="[nA] Local inhibitory current"/>
-        <Constant name="G" dimension="" value="global_coupling" description="Global coupling scaling"/>
-        <Constant name="lamda" dimension="" value="0.0" description="Inhibitory global coupling scaling"/>
-
-        <!-- Unpack params -->
-        <Constant name="J_NMDA" dimension="" value="0.15" description=""/>
-        <Constant name="J_I" dimension="" value="inner_connectivity" description=""/>
-        <DerivedVariable name="JI" dimension="" value="J_I*cbs_data" description="region specific value. this is an array holding region specific data">
-        <Constant name="J_NMDA" dimension="" value="0.15" description=""/>
-
         <!-- These variables should be assigned outside of the loops for efficiency -->
-        <DerivedVariable name="min_d_E" value="-1.0 * d_E" />
-        <DerivedVariable name="min_d_I" value="-1.0 * d_I" />
-        <DerivedVariable name="imintau_E" value="-1.0 / tau_E" />
-        <DerivedVariable name="imintau_I" value="-1.0 / tau_I" />
-        <DerivedVariable name="w_E__I_0" value="w_E * I_0" />
-        <DerivedVariable name="w_I__I_0" value="w_I * I_0" />
-        <DerivedVariable name="G_J_NMDA" value="G*J_NMDA"/>
-        <DerivedVariable name="w_plus__J_NMDA" value="w_plus * J_NMDA"/>
+        <DerivedParameter name="JI" value="inner_connectivity"/> <!-- J_I*cbs data -->
+        <DerivedParameter name="min_d_E" value="-1.0 * d_E" />
+        <DerivedParameter name="min_d_I" value="-1.0 * d_I" />
+        <DerivedParameter name="imintau_E" value="-1.0 / tau_E" />
+        <DerivedParameter name="imintau_I" value="-1.0 / tau_I" />
+        <DerivedParameter name="w_E__I_0" value="w_E * I_0" />
+        <DerivedParameter name="w_I__I_0" value="w_I * I_0" />
+        <DerivedParameter name="G_J_NMDA" value="G*J_NMDA"/>
+        <DerivedParameter name="w_plus__J_NMDA" value="w_plus * J_NMDA"/>
 
 
         <!-- Exposures are used for observables, for the name enter variable to be observed (usually states)
@@ -64,15 +59,7 @@
             <StateVariable name="V" dimension="0.0" exposure="0.0, 1.0"/>
             <StateVariable name="W" dimension="0.0" exposure="0.0, 1.0"/>
             
-             <!-- Make derived variables *** place holder *** moving outside of loop-->
-            <DerivedVariable name="min_d_E" value="-1.0 * d_E" />
-            <DerivedVariable name="min_d_I" value="-1.0 * d_I" />
-            <DerivedVariable name="imintau_E" value="-1.0 / tau_E" />
-            <DerivedVariable name="imintau_I" value="-1.0 / tau_I" />
-            <DerivedVariable name="w_E__I_0" value="w_E * I_0" />
-            <DerivedVariable name="w_I__I_0" value="w_I * I_0" />
-            <DerivedVariable name="G_J_NMDA" value="G*J_NMDA"/>
-            <DerivedVariable name="w_plus__J_NMDA" value="w_plus * J_NMDA"/>
+            <!-- Make derived variables *** place holder *** moving outside of loop-->
 
             <!-- Make sure that JI gets an index which provides region specific data -->
             <DerivedVariable name="tmp_I_E" value="a_E * (w_E__I_0 + w_plus__J_NMDA * V + c_pop1 - JI*W) - b_E"/>
@@ -87,13 +74,13 @@
     </ComponentType>
 
     <ComponentType name="coupling_function">
+        <Constant name="a" dimension="" value="1" description="Rescales the connection strength."/>
 
         <!-- variables for pre synaptic function-->
         <Parameter name="V_j" dimension='0'/>
         <!--        post coupling expression, needs to be present. If no temporary result needs to be computed enter 'None'-->
-        <DerivedParameter name="c_pop1" value="{V^2}"/>
+        <DerivedParameter name="c_pop1" value="rec_n"/>
 
-        <Constant name="a" dimension="" value="1" description="Rescales the connection strength."/>
 
     <Dynamics>
         <DerivedVariable name="pre" value="V_j * G_J_NMDA"/>
