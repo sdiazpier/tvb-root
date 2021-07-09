@@ -438,9 +438,15 @@ class Driver_Execute(Driver_Setup):
 		plt.show()
 
 	def write_output(self, tavg):
+		# Time series
 		tavg_file = open('tavg_data', 'wb')
 		pickle.dump(tavg, tavg_file)
 		tavg_file.close()
+
+		# Parameters combination used in the parameter sweep
+		params_file = open('params_data', 'wb')
+		pickle.dump(self.params, params_file)
+		params_file.close()
 
 	def run_all(self):
 
